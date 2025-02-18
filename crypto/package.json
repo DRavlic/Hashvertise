@@ -1,0 +1,17 @@
+{
+  "name": "crypto",
+  "version": "0.1.0",
+  "main": "index.ts",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only index.ts"
+  },
+  "dependencies": {
+    "@hashgraph/sdk": "^2.0.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "typescript": "^4.9.5",
+    "ts-node-dev": "^2.0.0",
+    "@types/node": "^18.0.0"
+  }
+}
