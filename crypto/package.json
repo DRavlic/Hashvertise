@@ -1,9 +1,13 @@
 {
-  "name": "crypto",
+  "name": "@hashvertise/crypto",
   "version": "0.1.0",
-  "main": "index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts"
+    "demo": "ts-node-dev --respawn --transpile-only src/demo.ts",
+    "build": "tsc",
+    "build:watch": "tsc --watch"
   },
   "dependencies": {
     "@hashgraph/sdk": "^2.0.0",
