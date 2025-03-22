@@ -1,6 +1,9 @@
 import { Client, AccountBalanceQuery } from "@hashgraph/sdk";
-import { HEDERA_OPERATOR_ID, HEDERA_OPERATOR_KEY } from "./environment";
-import { setupTopicListener, submitConsensusMessage } from "./consensusService";
+import { HEDERA_OPERATOR_ID, HEDERA_OPERATOR_KEY } from "../environment";
+import {
+  setupTopicListener,
+  submitConsensusMessage,
+} from "../consensusService";
 
 // Demo function for testing
 async function demo() {
