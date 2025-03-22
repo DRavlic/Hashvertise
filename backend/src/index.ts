@@ -1,18 +1,22 @@
-import express, { Request, Response } from 'express'
-import cors from 'cors'
-import { BACKEND_PORT } from './environment'
-import postsRouter from './routes/posts'
+import { mongoose } from "@typegoose/typegoose";
 
-const app = express()
-app.use(cors())
-app.use(express.json())
+import app from "./app";
+import logger from "./common/common.instances";
+import { DB, PORT } from "./environment";
 
-app.get('/', (req: Request, res: Response) => {
-  res.send('Hello from Express backend!')
-})
+// Connect to MongoDB and start the server
+const main = async () => {
+  try {
+    await mongoose.connect(DB);
+    logger.info("Connected to MongoDB successfully");
+  } catch (error) {
+    logger.error("MongoDB connection error:", error);
+    process.exit(1);
+  }
 
-app.use('/api', postsRouter)
+  app.listen(PORT, () => {
+    logger.info(`App is listening on port: ${PORT}`);
+  });
+};
 
-app.listen(BACKEND_PORT, () => {
-  console.log(`Backend server is listening on port ${BACKEND_PORT}`)
-})
+main();
