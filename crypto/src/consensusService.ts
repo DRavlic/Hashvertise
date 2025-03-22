@@ -26,7 +26,6 @@ export async function submitConsensusMessage(
       const createTx = await new TopicCreateTransaction().execute(client);
       const createRx = await createTx.getReceipt(client);
       topicId = createRx.topicId!;
-      console.log(`Created new topic ${topicId}`);
     }
 
     // Submit (large) message to the topic
@@ -38,7 +37,6 @@ export async function submitConsensusMessage(
         .setMessage(message)
         .execute(client);
 
-      console.log(`Message submitted to ${topicId}: ${message}`);
       return topicId;
     }
   } catch (error) {
@@ -66,30 +64,45 @@ export async function submitLargeMessage(
     .setMessage(buffer)
     .setMaxChunks(totalChunks)
     .execute(client);
-
-  console.log(`Large message submitted to ${topicId}: ${largeMessage}`);
 }
 
 /**
  * Sets up a listener for messages on a Hedera topic
  * @param client Hedera client
  * @param topicId Topic ID to listen to
+ * @param onMessageCallback Optional callback function to handle incoming messages
  */
-export async function setupTopicListener(client: Client, topicId: TopicId) {
+export async function setupTopicListener(
+  client: Client,
+  topicId: TopicId,
+  onMessageCallback?: (
+    topicId: string,
+    message: string,
+    timestamp: Date
+  ) => Promise<void>
+) {
   try {
     // Wait for mirror node to sync with main network
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
     new TopicMessageQuery()
       .setTopicId(topicId)
-      .subscribe(client, null, (message: TopicMessage | null) => {
+      .subscribe(client, null, async (message: TopicMessage | null) => {
         if (message) {
           const messageAsString = Buffer.from(message.contents).toString(
             "utf8"
           );
-          console.log(
-            `${message.consensusTimestamp.toDate()} Received: ${messageAsString}`
-          );
+
+          // Call the callback function if provided
+          if (onMessageCallback) {
+            await onMessageCallback(
+              topicId.toString(),
+              messageAsString,
+              message.consensusTimestamp.toDate()
+            ).catch((error) => {
+              console.error("Error in message callback:", error);
+            });
+          }
         } else {
           console.error("Error in subscription");
         }

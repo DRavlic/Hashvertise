@@ -22,6 +22,27 @@ export class TopicListener {
   public isActive!: boolean;
 }
 
-// Create and export the model
-const TopicListenerModel = getModelForClass(TopicListener);
+@modelOptions({
+  schemaOptions: {
+    timestamps: true,
+    collection: "topicMessages",
+  },
+  options: {
+    allowMixed: Severity.ALLOW,
+  },
+})
+export class TopicMessage {
+  @prop({ required: true, index: true })
+  public topicId!: string;
+
+  @prop({ required: true })
+  public message!: string;
+
+  @prop()
+  public consensusTimestamp?: Date;
+}
+
+// Create and export the models
+export const TopicListenerModel = getModelForClass(TopicListener);
+export const TopicMessageModel = getModelForClass(TopicMessage);
 export default TopicListenerModel;

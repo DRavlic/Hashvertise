@@ -1,5 +1,5 @@
 import { Client, TopicId, setupTopicListener } from "@hashvertise/crypto";
-import TopicListenerModel from "./topic.model";
+import { TopicListenerModel, TopicMessageModel } from "./topic.model";
 import logger from "../common/common.instances";
 
 interface TopicStatusResponse {
@@ -13,6 +13,29 @@ interface TopicListenResponse {
   error?: string;
   details?: string;
 }
+
+/**
+ * Handles incoming topic messages by saving them to the database
+ * @param topicId The ID of the topic receiving the message
+ * @param message The message content
+ * @param timestamp The consensus timestamp
+ */
+const handleTopicMessage = async (
+  topicId: string,
+  message: string,
+  timestamp: Date
+): Promise<void> => {
+  try {
+    await TopicMessageModel.create({
+      topicId,
+      message,
+      consensusTimestamp: timestamp,
+    });
+    logger.info(`Saved new message for topic ${topicId}`);
+  } catch (error: any) {
+    logger.error(`Error saving message for topic ${topicId}: ${error.message}`);
+  }
+};
 
 /**
  * Setup a listener for a Hedera topic
@@ -38,8 +61,12 @@ export const setupHederaTopicListener = async (
       { upsert: true, new: true }
     );
 
-    // Set up the Hedera topic listener
-    await setupTopicListener(client, TopicId.fromString(topicId));
+    // Set up the Hedera topic listener with callback to save messages
+    await setupTopicListener(
+      client,
+      TopicId.fromString(topicId),
+      handleTopicMessage
+    );
     logger.info(`Started listening to topic: ${topicId}`);
 
     return {
@@ -80,6 +107,32 @@ export const getTopicStatus = async (
   } catch (error) {
     logger.error(`Error checking status for topic ${topicId}:`, error);
     throw error;
+  }
+};
+
+/**
+ * Get messages for a specific topic
+ */
+export const getTopicMessages = async (topicId: string, limit = 50) => {
+  try {
+    const messages = await TopicMessageModel.find({ topicId })
+      .sort({ consensusTimestamp: -1 })
+      .limit(limit);
+
+    return {
+      success: true,
+      messages,
+    };
+  } catch (error: any) {
+    logger.error(
+      `Error retrieving messages for topic ${topicId}: ${error.message}`
+    );
+
+    return {
+      success: false,
+      error: "Failed to retrieve topic messages",
+      details: error.message || String(error),
+    };
   }
 };
 
