@@ -1,6 +1,7 @@
 import { Client, TopicId, setupTopicListener } from "@hashvertise/crypto";
 import { TopicListenerModel, TopicMessageModel } from "./topic.model";
 import logger from "../common/common.instances";
+import { DEFAULT_TOPIC_MESSAGES_LIMIT } from "./topic.constants";
 
 interface TopicStatusResponse {
   topicId: string;
@@ -76,7 +77,6 @@ export const setupHederaTopicListener = async (
   } catch (error: any) {
     logger.error(`Error in setupHederaTopicListener: ${error.message}`);
 
-    // Use the existing function to handle deactivation - don't duplicate logic
     await deactivateTopicListener(topicId).catch((deactivateError) => {
       logger.warn(
         `Failed to deactivate topic ${topicId}: ${deactivateError.message}`
@@ -113,7 +113,10 @@ export const getTopicStatus = async (
 /**
  * Get messages for a specific topic
  */
-export const getTopicMessages = async (topicId: string, limit = 50) => {
+export const getTopicMessages = async (
+  topicId: string,
+  limit = DEFAULT_TOPIC_MESSAGES_LIMIT
+) => {
   try {
     const messages = await TopicMessageModel.find({ topicId })
       .sort({ consensusTimestamp: -1 })
