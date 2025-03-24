@@ -4,4 +4,4 @@ export {
   setupTopicListener,
 } from "./consensusService";
 
-export { Client, TopicId } from "@hashgraph/sdk";
+export { Client, TopicId, SubscriptionHandle } from "@hashgraph/sdk";

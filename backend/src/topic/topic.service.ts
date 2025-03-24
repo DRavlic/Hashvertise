@@ -1,19 +1,20 @@
-import { Client, TopicId, setupTopicListener } from "@hashvertise/crypto";
+import {
+  Client,
+  TopicId,
+  setupTopicListener,
+  SubscriptionHandle,
+} from "@hashvertise/crypto";
 import { TopicListenerModel, TopicMessageModel } from "./topic.model";
 import logger from "../common/common.instances";
-import { DEFAULT_TOPIC_MESSAGES_LIMIT } from "./topic.constants";
+import {
+  DEFAULT_TOPIC_MESSAGES_LIMIT,
+  TopicListenResponse,
+  TopicStatusResponse,
+} from "./topic.constants";
 
-interface TopicStatusResponse {
-  topicId: string;
-  isActive: boolean;
-}
-
-interface TopicListenResponse {
-  success: boolean;
-  message?: string;
-  error?: string;
-  details?: string;
-}
+// Store active subscriptions in memory
+// Note: this will be lost on server restart but we'll recover them from the database
+const activeSubscriptions = new Map<string, SubscriptionHandle>();
 
 /**
  * Handles incoming topic messages by saving them to the database
@@ -39,6 +40,58 @@ const handleTopicMessage = async (
 };
 
 /**
+ * Initialize all active topic listeners on server startup
+ * @param client Hedera client
+ */
+export const initializeTopicListeners = async (
+  client: Client
+): Promise<void> => {
+  try {
+    // Get all active topic listeners from database
+    const activeListeners = await TopicListenerModel.find({ isActive: true });
+
+    if (activeListeners.length === 0) {
+      logger.info("No active topic listeners to initialize");
+      return;
+    }
+
+    // Set up each listener
+    const setupPromises = activeListeners.map(async (listener) => {
+      try {
+        const subscription = await setupTopicListener(
+          client,
+          TopicId.fromString(listener.topicId),
+          handleTopicMessage
+        );
+
+        // Store the subscription in memory
+        if (subscription) {
+          activeSubscriptions.set(listener.topicId, subscription);
+          logger.info(`Re-initialized listener for topic: ${listener.topicId}`);
+        } else {
+          throw new Error();
+        }
+      } catch (error: any) {
+        logger.error(
+          `Failed to initialize listener for topic ${listener.topicId}: ${error.message}`
+        );
+
+        // Mark as inactive since we couldn't set it up
+        await TopicListenerModel.findOneAndUpdate(
+          { topicId: listener.topicId },
+          { isActive: false }
+        );
+      }
+    });
+
+    await Promise.all(setupPromises);
+    logger.info("Topic listener initialization complete");
+  } catch (error: any) {
+    logger.error(`Error initializing topic listeners: ${error.message}`);
+  }
+};
+
+/**
  * Setup a listener for a Hedera topic
  */
 export const setupHederaTopicListener = async (
@@ -46,13 +99,29 @@ export const setupHederaTopicListener = async (
   client: Client
 ): Promise<TopicListenResponse> => {
   try {
-    // Check if we're already listening to this topic
+    // Check if we're already listening to this topic in database
     const existingListener = await TopicListenerModel.findOne({ topicId });
     if (existingListener?.isActive) {
       return {
         success: false,
         error: "Already listening to this topic",
       };
+    }
+
+    // Set up the Hedera topic listener with callback to save messages
+    const subscription = await setupTopicListener(
+      client,
+      TopicId.fromString(topicId),
+      handleTopicMessage
+    );
+
+    // Store subscription in memory
+    if (subscription) {
+      activeSubscriptions.set(topicId, subscription);
+    } else {
+      throw new Error(
+        "Failed to set up topic listener for topic ID: " + topicId
+      );
     }
 
     // Create or update the topic listener in database
@@ -62,12 +131,6 @@ export const setupHederaTopicListener = async (
       { upsert: true, new: true }
     );
 
-    // Set up the Hedera topic listener with callback to save messages
-    await setupTopicListener(
-      client,
-      TopicId.fromString(topicId),
-      handleTopicMessage
-    );
     logger.info(`Started listening to topic: ${topicId}`);
 
     return {
@@ -77,11 +140,20 @@ export const setupHederaTopicListener = async (
   } catch (error: any) {
     logger.error(`Error in setupHederaTopicListener: ${error.message}`);
 
-    await deactivateTopicListener(topicId).catch((deactivateError) => {
-      logger.warn(
-        `Failed to deactivate topic ${topicId}: ${deactivateError.message}`
-      );
-    });
+    // Clean up if needed
+    if (activeSubscriptions.has(topicId)) {
+      try {
+        const subscription = activeSubscriptions.get(topicId);
+        if (subscription) {
+          subscription.unsubscribe();
+          activeSubscriptions.delete(topicId);
+        }
+      } catch (cleanupError: any) {
+        logger.warn(
+          `Failed to clean up subscription for ${topicId}: ${cleanupError.message}`
+        );
+      }
+    }
 
     return {
       success: false,
@@ -99,10 +171,19 @@ export const getTopicStatus = async (
 ): Promise<TopicStatusResponse> => {
   try {
     const listener = await TopicListenerModel.findOne({ topicId });
+    const isActive = listener?.isActive || false;
+
+    // Consistency check - if DB says active but no subscription in memory,
+    // we still report as active since we'll recover it on next restart
+    if (isActive && !activeSubscriptions.has(topicId)) {
+      logger.warn(
+        `Inconsistent state for topic ${topicId}: marked active in DB but no in-memory subscription`
+      );
+    }
 
     return {
       topicId,
-      isActive: listener ? listener.isActive : false,
+      isActive,
     };
   } catch (error) {
     logger.error(`Error checking status for topic ${topicId}:`, error);
@@ -140,14 +221,29 @@ export const getTopicMessages = async (
 };
 
 /**
- * Mark a topic listener as inactive
+ * Mark a topic listener as inactive and stop listening
  */
 export const deactivateTopicListener = async (
-  topicId: string
+  topicId: string,
+  client: Client
 ): Promise<void> => {
   try {
+    // Update database record first
     await TopicListenerModel.findOneAndUpdate({ topicId }, { isActive: false });
-    logger.info(`Marked topic ${topicId} as inactive`);
+
+    // Try to unsubscribe if we have an active subscription
+    const subscription = activeSubscriptions.get(topicId);
+    if (subscription) {
+      subscription.unsubscribe();
+      activeSubscriptions.delete(topicId);
+      logger.info(`Unsubscribed from topic: ${topicId}`);
+    } else {
+      logger.info(
+        `No active subscription found for topic: ${topicId}, only database updated`
+      );
+    }
+
+    logger.info(`Deactivated topic listener for ${topicId}`);
   } catch (error) {
     logger.error(`Error deactivating topic ${topicId}:`, error);
     throw error;

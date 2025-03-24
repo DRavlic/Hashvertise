@@ -104,8 +104,9 @@ export const getTopicMessages = async (req: Request, res: Response) => {
 export const deactivateTopicListener = async (req: Request, res: Response) => {
   try {
     const { topicId } = req.params;
+    const hederaClient = req.app.locals.hederaClient;
 
-    await deactivateTopicListenerService(topicId);
+    await deactivateTopicListenerService(topicId, hederaClient);
 
     return res.status(StatusCodes.OK).json({
       success: true,

@@ -5,8 +5,10 @@ import {
   TopicId,
   TopicMessageQuery,
   TopicMessage,
+  SubscriptionHandle,
 } from "@hashgraph/sdk";
 import { CHUNK_SIZE } from "./environment";
+
 
 /**
  * Submits a consensus message to a Hedera topic
@@ -70,22 +72,23 @@ export async function submitLargeMessage(
  * Sets up a listener for messages on a Hedera topic
  * @param client Hedera client
  * @param topicId Topic ID to listen to
- * @param onMessageCallback Optional callback function to handle incoming messages
+ * @param onMessageCallback Callback function to handle incoming messages
+ * @returns The subscription object that can be used to unsubscribe later
  */
 export async function setupTopicListener(
   client: Client,
   topicId: TopicId,
-  onMessageCallback?: (
+  onMessageCallback: (
     topicId: string,
     message: string,
     timestamp: Date
   ) => Promise<void>
-) {
+): Promise<SubscriptionHandle | undefined> {
   try {
     // Wait for mirror node to sync with main network
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
-    new TopicMessageQuery()
+    const subscription = new TopicMessageQuery()
       .setTopicId(topicId)
       .subscribe(client, null, async (message: TopicMessage | null) => {
         if (message) {
@@ -94,20 +97,21 @@ export async function setupTopicListener(
           );
 
           // Call the callback function if provided
-          if (onMessageCallback) {
-            await onMessageCallback(
-              topicId.toString(),
-              messageAsString,
-              message.consensusTimestamp.toDate()
-            ).catch((error) => {
-              console.error("Error in message callback:", error);
-            });
-          }
+          await onMessageCallback(
+            topicId.toString(),
+            messageAsString,
+            message.consensusTimestamp.toDate()
+          ).catch((error) => {
+            console.error("Error in message callback:", error);
+          });
         } else {
           console.error("Error in subscription");
         }
       });
+
+    return subscription;
   } catch (error) {
     console.error("Mirror node error:", error);
+    return undefined;
   }
 }

@@ -5,6 +5,16 @@ import {
   submitConsensusMessage,
 } from "../consensusService";
 
+// Simple callback function to handle incoming topic messages
+const handleMessage = async (
+  topicId: string,
+  message: string,
+  timestamp: Date
+): Promise<void> => {
+  console.log(`[${timestamp.toISOString()}] Message received from topic ${topicId}:`);
+  console.log(`Content: ${message}`);
+};
+
 // Demo function for testing
 async function demo() {
   if (!HEDERA_OPERATOR_ID || !HEDERA_OPERATOR_KEY) {
@@ -29,7 +39,7 @@ async function demo() {
 
     if (topicId) {
       // Setup listener before sending another message
-      await setupTopicListener(client, topicId);
+      await setupTopicListener(client, topicId, handleMessage);
 
       // Test large message (1400 bytes = 2 chunks)
       const largeMessage = `START-${"-".repeat(1400)}-END`; // message 1400 bytes
