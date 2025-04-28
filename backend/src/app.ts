@@ -1,8 +1,9 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
 import { errorHandler } from "./common/common.middleware";
-import { hederaClient } from "./common/common.crypto";
+import { hederaClient } from "./common/common.hedera";
 import topicRoutes from "./topic/topic.routes";
+import consensusRoutes from "./consensus/consensus.routes";
 
 // Create Express app
 const app = express();
@@ -14,13 +15,18 @@ app.use(express.json());
 // Make Hedera client available throughout the app
 app.locals.hederaClient = hederaClient;
 
-// Root endpoint
+/**
+ * @route GET /
+ * @description API status endpoint
+ * @access Public
+ */
 app.get("/", (req: Request, res: Response) => {
   res.json({ message: "Hashvertise API is running" });
 });
 
 // Register routes
 app.use("/api/topic", topicRoutes);
+app.use("/api/consensus", consensusRoutes);
 
 // Error handler
 app.use(errorHandler);
