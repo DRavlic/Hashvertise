@@ -4,7 +4,12 @@ import logger from "./common.instances";
 
 /**
  * Global error handling middleware
- * Catches any errors thrown in routes or other middleware
+ *
+ * @param {any} err - Error object thrown by the application
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ * @param {NextFunction} next - Express next function
+ * @returns {Response} HTTP response with error information
  */
 export const errorHandler = (
   err: any,

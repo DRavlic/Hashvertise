@@ -15,20 +15,36 @@ import {
 
 const router = express.Router();
 
-// POST /api/topic/listen - Set up a topic listener
+/**
+ * @route POST /api/topic/listen
+ * @description Set up a topic listener for a Hedera topic
+ * @access Public
+ */
 router.post("/listen", validate(topicListenSchema), setupHederaTopicListener);
 
-// GET /api/topic/status/:topicId - Check topic listener status
+/**
+ * @route GET /api/topic/status/:topicId
+ * @description Check the status of a topic listener
+ * @access Public
+ */
 router.get("/status/:topicId", validate(topicStatusSchema), checkTopicStatus);
 
-// GET /api/topic/messages/:topicId - Get all messages for a topic
+/**
+ * @route GET /api/topic/messages/:topicId
+ * @description Get all messages for a specific topic
+ * @access Public
+ */
 router.get(
   "/messages/:topicId",
   validate(topicMessagesSchema),
   getTopicMessages
 );
 
-// POST /api/topic/deactivate/:topicId - Deactivate a topic listener
+/**
+ * @route POST /api/topic/deactivate/:topicId
+ * @description Deactivate a topic listener
+ * @access Public
+ */
 router.post(
   "/deactivate/:topicId",
   validate(topicDeactivateSchema),

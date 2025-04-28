@@ -10,7 +10,11 @@ import logger from "../common/common.instances";
 import { DEFAULT_TOPIC_MESSAGES_LIMIT } from "./topic.constants";
 
 /**
- * Set up a topic listener
+ * Set up a topic listener for a Hedera topic
+ *
+ * @param {Request} req - Express request object containing topicId in body
+ * @param {Response} res - Express response object
+ * @returns {Promise<Response>} HTTP response with setup result
  */
 export const setupHederaTopicListener = async (req: Request, res: Response) => {
   try {
@@ -48,7 +52,11 @@ export const setupHederaTopicListener = async (req: Request, res: Response) => {
 };
 
 /**
- * Check topic listener status
+ * Check the status of a topic listener
+ *
+ * @param {Request} req - Express request object containing topicId in params
+ * @param {Response} res - Express response object
+ * @returns {Promise<Response>} HTTP response with topic status
  */
 export const checkTopicStatus = async (req: Request, res: Response) => {
   try {
@@ -68,6 +76,10 @@ export const checkTopicStatus = async (req: Request, res: Response) => {
 
 /**
  * Get messages for a specific topic
+ *
+ * @param {Request} req - Express request object containing topicId in params and optional limit in query
+ * @param {Response} res - Express response object
+ * @returns {Promise<Response>} HTTP response with topic messages or error
  */
 export const getTopicMessages = async (req: Request, res: Response) => {
   try {
@@ -100,6 +112,10 @@ export const getTopicMessages = async (req: Request, res: Response) => {
 
 /**
  * Deactivate a topic listener
+ *
+ * @param {Request} req - Express request object containing topicId in params
+ * @param {Response} res - Express response object
+ * @returns {Promise<Response>} HTTP response with deactivation result
  */
 export const deactivateTopicListener = async (req: Request, res: Response) => {
   try {

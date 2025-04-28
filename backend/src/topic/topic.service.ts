@@ -6,11 +6,8 @@ import {
 } from "@hashvertise/crypto";
 import { TopicListenerModel, TopicMessageModel } from "./topic.model";
 import logger from "../common/common.instances";
-import {
-  DEFAULT_TOPIC_MESSAGES_LIMIT,
-  TopicListenResponse,
-  TopicStatusResponse,
-} from "./topic.constants";
+import { DEFAULT_TOPIC_MESSAGES_LIMIT } from "./topic.constants";
+import { TopicListenResponse, TopicStatusResponse } from "./topic.interfaces";
 
 // Store active subscriptions in memory
 // Note: this will be lost on server restart but we'll recover them from the database
@@ -18,9 +15,11 @@ const activeSubscriptions = new Map<string, SubscriptionHandle>();
 
 /**
  * Handles incoming topic messages by saving them to the database
- * @param topicId The ID of the topic receiving the message
- * @param message The message content
- * @param timestamp The consensus timestamp
+ *
+ * @param {string} topicId - The ID of the topic receiving the message
+ * @param {string} message - The message content
+ * @param {Date} timestamp - The consensus timestamp
+ * @returns {Promise<void>}
  */
 const handleTopicMessage = async (
   topicId: string,
@@ -41,7 +40,9 @@ const handleTopicMessage = async (
 
 /**
  * Initialize all active topic listeners on server startup
- * @param client Hedera client
+ *
+ * @param {Client} client - Hedera client
+ * @returns {Promise<void>}
  */
 export const initializeTopicListeners = async (
   client: Client
@@ -93,6 +94,10 @@ export const initializeTopicListeners = async (
 
 /**
  * Setup a listener for a Hedera topic
+ *
+ * @param {string} topicId - Topic ID to listen to
+ * @param {Client} client - Hedera client instance
+ * @returns {Promise<TopicListenResponse>} Response indicating success or failure
  */
 export const setupHederaTopicListener = async (
   topicId: string,
@@ -165,6 +170,9 @@ export const setupHederaTopicListener = async (
 
 /**
  * Check the status of a topic listener
+ *
+ * @param {string} topicId - Topic ID to check
+ * @returns {Promise<TopicStatusResponse>} Response with topic status
  */
 export const getTopicStatus = async (
   topicId: string
@@ -193,6 +201,11 @@ export const getTopicStatus = async (
 
 /**
  * Get messages for a specific topic
+ *
+ * @param {string} topicId - Topic ID to get messages for
+ * @param {number} [limit=DEFAULT_TOPIC_MESSAGES_LIMIT] - Maximum number of messages to return
+ * @returns {Promise<{success: boolean, messages?: any[], error?: string, details?: string}>}
+ *          Response with messages or error details
  */
 export const getTopicMessages = async (
   topicId: string,
@@ -222,6 +235,11 @@ export const getTopicMessages = async (
 
 /**
  * Mark a topic listener as inactive and stop listening
+ *
+ * @param {string} topicId - Topic ID to stop listening to
+ * @param {Client} client - Hedera client instance
+ * @returns {Promise<void>}
+ * @throws {Error} If deactivation fails
  */
 export const deactivateTopicListener = async (
   topicId: string,
