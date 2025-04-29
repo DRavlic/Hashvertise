@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { WalletProvider } from "./providers/WalletProvider";
 import { Layout } from "./components/Layout";
 import { Home } from "./pages/Home";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   return (
@@ -15,6 +17,7 @@ function App() {
             {/* <Route path="/campaigns" element={<Campaigns />} /> */}
           </Routes>
         </Layout>
+        <ToastContainer />
       </WalletProvider>
     </Router>
   );
