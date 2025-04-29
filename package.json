@@ -28,5 +28,8 @@
   "resolutions": {
     "@hashgraph/sdk": "^2.63.0",
     "hashconnect/@hashgraph/sdk": "^2.63.0"
+  },
+  "overrides": {
+    "@hashgraph/sdk": "2.63.0"
   }
 }
