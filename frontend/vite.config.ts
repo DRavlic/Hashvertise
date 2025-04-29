@@ -13,4 +13,16 @@ export default defineConfig({
   server: {
     port: 3000,
   },
+  // Add Node.js polyfills
+  define: {
+    global: {},
+    "process.env": {},
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      define: {
+        global: "globalThis",
+      },
+    },
+  },
 });
