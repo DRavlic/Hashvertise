@@ -7,6 +7,7 @@ import { APP_METADATA, WALLET_CONNECT_PROJECT_ID } from "./constants";
 import {
   AccountId,
   LedgerId,
+  TopicCreateTransaction,
   TopicId,
   TopicMessageSubmitTransaction,
 } from "@hashgraph/sdk";
@@ -145,12 +146,42 @@ export async function signMessage(message: string) {
 
     showSuccess("Message signed successfully");
 
-    console.log("signature:", signature);
-
     return signature;
   } catch (error) {
     showError(`Error signing message: ${getErrorMessage(error)}`);
     console.error("Error signing message:", error);
+    return null;
+  }
+}
+
+export async function createTopic() {
+  if (!hashconnect || !pairingData) {
+    showError("Wallet not connected. Please connect your wallet first.");
+    return null;
+  }
+
+  const accountId = getAccountId();
+  if (!accountId) {
+    showError("No account ID found in pairing data.");
+    return null;
+  }
+
+  try {
+    const signer = hashconnect.getSigner(AccountId.fromString(accountId));
+    const tx = await new TopicCreateTransaction().freezeWithSigner(signer);
+
+    const response = await tx.executeWithSigner(signer);
+    const receipt = await response.getReceiptWithSigner(signer);
+
+    showSuccess("Topic created successfully");
+
+    return {
+      topicId: receipt.topicId,
+      txId: response.transactionId.toString(),
+    };
+  } catch (error) {
+    showError(`Error creating topic: ${getErrorMessage(error)}`);
+    console.error("Error creating topic:", error);
     return null;
   }
 }
@@ -169,16 +200,16 @@ export async function submitTopicMessage(message: string, topicId: string) {
 
   try {
     const signer = hashconnect.getSigner(AccountId.fromString(accountId));
-    const trans = await new TopicMessageSubmitTransaction()
+    const tx = await new TopicMessageSubmitTransaction()
       .setTopicId(TopicId.fromString(topicId))
       .setMessage(message)
       .freezeWithSigner(signer);
 
-    const response = await trans.executeWithSigner(signer);
+    const response = await tx.executeWithSigner(signer);
 
     showSuccess("Message submitted successfully");
 
-    return response;
+    return response; // TO DO: return tx ID or something else than response
   } catch (error) {
     showError(`Error submitting topic message: ${getErrorMessage(error)}`);
     console.error("Error submitting topic message:", error);
