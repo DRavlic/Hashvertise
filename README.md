@@ -18,6 +18,21 @@ The project follows a client-server architecture for interacting with the Hedera
 
 > **Important**: Cryptographic operations that require authentication with private keys should always be performed on the backend. The frontend should only use hashconnect for wallet connections and signing.
 
+## Authentication and Campaign Verification
+
+The platform uses Hedera wallet-based authentication:
+
+1. Users sign up with their Hedera account ID and public key
+2. When creating a campaign, the frontend:
+   - Creates a new Hedera topic
+   - Signs a message containing topic details using the connected wallet
+   - Sends the signed message to the backend
+3. The backend verifies:
+   - The user exists in the database
+   - The signature is valid using HashConnect's verification
+   - The topic exists on the Hedera network
+4. After verification, the backend sets up a topic listener for the campaign
+
 ## Setup
 
 1. Clone the repository
