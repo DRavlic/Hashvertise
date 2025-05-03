@@ -21,7 +21,10 @@ import { UserModel } from "../common/common.model";
  * @param {Response} res - Express response object
  * @returns {Promise<Response>} HTTP response with setup result
  */
-export const setupHederaTopicListener = async (req: Request, res: Response) => {
+export const setupHederaTopicListener = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   try {
     const { topicId } = req.body;
     const hederaClient = req.app.locals.hederaClient;
@@ -86,7 +89,10 @@ export const checkTopicStatus = async (req: Request, res: Response) => {
  * @param {Response} res - Express response object
  * @returns {Promise<Response>} HTTP response with topic messages or error
  */
-export const getTopicMessages = async (req: Request, res: Response) => {
+export const getTopicMessages = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   try {
     const { topicId } = req.params;
     const limit =
@@ -115,7 +121,10 @@ export const getTopicMessages = async (req: Request, res: Response) => {
  * @param {Response} res - Express response object
  * @returns {Promise<Response>} HTTP response with deactivation result
  */
-export const deactivateTopicListener = async (req: Request, res: Response) => {
+export const deactivateTopicListener = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   try {
     const { topicId } = req.params;
     const hederaClient = req.app.locals.hederaClient;
@@ -143,7 +152,10 @@ export const deactivateTopicListener = async (req: Request, res: Response) => {
  * @param {Response} res - Express response object
  * @returns {Promise<Response>} HTTP response with campaign verification result
  */
-export const verifyCampaignAndCreate = async (req: Request, res: Response) => {
+export const verifyCampaignAndCreate = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   try {
     const { message, signature } = req.body;
     const hederaClient = req.app.locals.hederaClient;

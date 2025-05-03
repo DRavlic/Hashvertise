@@ -6,6 +6,8 @@ import {
   TopicMessageQuery,
   TopicMessage,
   SubscriptionHandle,
+  AccountId,
+  AccountInfoQuery,
 } from "@hashgraph/sdk";
 import logger from "./common.instances";
 import {
@@ -126,6 +128,32 @@ export async function setupTopicListener(
     throw new Error(`Error setting up topic listener: ${error.message}`);
   }
 }
+
+/**
+ * Gets the public key of an account
+ *
+ * @param {Client} client - Hedera client instance
+ * @param {AccountId} accountId - Account ID to get public key for
+ * @returns {Promise<string>} The public key of the account
+ */
+export const getAccountPublicKey = async (
+  client: Client,
+  accountId: AccountId
+): Promise<string> => {
+  try {
+    const query = new AccountInfoQuery().setAccountId(accountId);
+    const info = await query.execute(client);
+
+    return info.key.toString();
+  } catch (error: any) {
+    logger.error(
+      `Error getting public key for account ${accountId}: ${error.message}`
+    );
+    throw new Error(
+      `Error getting public key for account ${accountId}: ${error.message}`
+    );
+  }
+};
 
 /**
  * Initialize a Hedera client with the configured credentials
