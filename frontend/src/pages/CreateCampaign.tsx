@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWallet } from "../hooks/useWallet";
 import { createTopic, signMessage } from "../lib/wallet";
-import { showError } from "../lib/toast";
+import { showError, showSuccess } from "../lib/toast";
 import { HashConnectConnectionState } from "hashconnect";
 
 interface CampaignFormData {
@@ -60,12 +60,27 @@ export function CreateCampaign() {
         return;
       }
 
-      // TO DO: Send the message and signature to the backend
-      console.log("Message:", message);
-      console.log("Signature:", signature);
+      // Send the message and signature to the backend
+      const response = await fetch("/api/topic/campaign/verify", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message,
+          signature,
+        }),
+      });
 
-      // For now, just navigate back to home
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to verify campaign");
+      }
+
+      // If successful, navigate to the home page and show a success message
       navigate("/");
+      showSuccess("Campaign created successfully");
     } catch (error) {
       console.error("Error creating campaign:", error);
       showError(
