@@ -42,7 +42,37 @@ export class TopicMessage {
   public consensusTimestamp?: Date;
 }
 
+@modelOptions({
+  schemaOptions: {
+    timestamps: true,
+    collection: "campaigns",
+  },
+  options: {
+    allowMixed: Severity.ALLOW,
+  },
+})
+export class Campaign {
+  @prop({ required: true, unique: true, index: true })
+  public topicId!: string;
+
+  @prop({ required: true })
+  public name!: string;
+
+  @prop({ required: true, index: true })
+  public accountId!: string;
+
+  @prop({ required: true })
+  public prizePool!: number;
+
+  @prop({ required: true })
+  public requirement!: string;
+
+  @prop({ required: true, unique: true })
+  public txId!: string;
+}
+
 // Create and export the models
 export const TopicListenerModel = getModelForClass(TopicListener);
 export const TopicMessageModel = getModelForClass(TopicMessage);
+export const CampaignModel = getModelForClass(Campaign);
 export default TopicListenerModel;

@@ -46,3 +46,15 @@ export const topicDeactivateSchema = z.object({
     }),
   }),
 });
+
+// Schema for campaign verification
+export const campaignVerifySchema = z.object({
+  body: z.object({
+    message: z.string({
+      required_error: "Message is required",
+    }),
+    signature: z.string({
+      required_error: "Signature is required",
+    }),
+  }),
+});

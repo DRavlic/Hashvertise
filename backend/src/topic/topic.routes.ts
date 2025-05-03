@@ -4,6 +4,7 @@ import {
   checkTopicStatus,
   getTopicMessages,
   deactivateTopicListener,
+  verifyCampaignAndCreate,
 } from "./topic.controller";
 import { validate } from "./topic.middleware";
 import {
@@ -11,6 +12,7 @@ import {
   topicStatusSchema,
   topicMessagesSchema,
   topicDeactivateSchema,
+  campaignVerifySchema,
 } from "./topic.schema";
 
 const router = express.Router();
@@ -49,6 +51,17 @@ router.post(
   "/deactivate/:topicId",
   validate(topicDeactivateSchema),
   deactivateTopicListener
+);
+
+/**
+ * @route POST /api/topic/campaign/verify
+ * @description Verify campaign signature and create a campaign
+ * @access Public
+ */
+router.post(
+  "/campaign/verify",
+  validate(campaignVerifySchema),
+  verifyCampaignAndCreate
 );
 
 export default router;

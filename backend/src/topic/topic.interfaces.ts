@@ -15,3 +15,15 @@ export interface TopicListenResponse {
   error?: string;
   details?: string;
 }
+
+/**
+ * Parsed campaign data from a message
+ */
+export interface ParsedCampaignData {
+  txId: string;
+  topicId: string;
+  name: string;
+  accountId: string;
+  prizePool: number;
+  requirement: string;
+}

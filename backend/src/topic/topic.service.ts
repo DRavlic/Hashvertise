@@ -1,9 +1,18 @@
 import { Client, TopicId, SubscriptionHandle } from "@hashgraph/sdk";
-import { TopicListenerModel, TopicMessageModel } from "./topic.model";
+import {
+  TopicListenerModel,
+  TopicMessageModel,
+  CampaignModel,
+} from "./topic.model";
 import logger from "../common/common.instances";
 import { DEFAULT_TOPIC_MESSAGES_LIMIT } from "./topic.constants";
-import { TopicListenResponse, TopicStatusResponse } from "./topic.interfaces";
+import {
+  TopicListenResponse,
+  TopicStatusResponse,
+  ParsedCampaignData,
+} from "./topic.interfaces";
 import { setupTopicListener } from "../common/common.hedera";
+import { PublicKey, TopicInfoQuery } from "@hashgraph/sdk";
 
 // Store active subscriptions in memory
 // Note: this will be lost on server restart but we'll recover them from the database
@@ -258,5 +267,142 @@ export const deactivateTopicListener = async (
   } catch (error: any) {
     logger.error(`Error deactivating topic ${topicId}:`, error);
     throw new Error(`Error deactivating topic ${topicId}: ${error.message}`);
+  }
+};
+
+/**
+ * Parse campaign data from a message
+ *
+ * @param {string} message - The message content to parse
+ * @returns {ParsedCampaignData | null} Parsed campaign data or null if parsing fails
+ */
+export const parseCampaignMessage = (
+  message: string
+): ParsedCampaignData | null => {
+  try {
+    // Extract the actual content from the message format
+    // Format: "Hashvertise signed message({length}): {content}"
+    const contentMatch = message.match(
+      /Hashvertise signed message\(\d+\): (.*)/
+    );
+    if (!contentMatch || !contentMatch[1]) {
+      return null;
+    }
+
+    const content = contentMatch[1];
+
+    // Parse the comma-separated values
+    const [txId, topicId, name, accountId, prizePoolStr, requirement] =
+      content.split(", ");
+
+    // Convert prize pool to number
+    const prizePool = parseInt(prizePoolStr);
+
+    // Validate all required fields are present
+    if (
+      !txId ||
+      !topicId ||
+      !name ||
+      !accountId ||
+      isNaN(prizePool) ||
+      !requirement
+    ) {
+      return null;
+    }
+
+    return {
+      txId,
+      topicId,
+      name,
+      accountId,
+      prizePool,
+      requirement,
+    };
+  } catch (error) {
+    logger.error(`Error parsing campaign message: ${error}`);
+    return null;
+  }
+};
+
+/**
+ * Verify campaign signature using HashConnect
+ *
+ * @param {string} message - The signed message
+ * @param {string} signature - The signature to verify
+ * @param {string} publicKey - The public key to verify against
+ * @returns {Promise<boolean>} Whether the signature is valid
+ */
+export const verifyCampaignSignature = async (
+  message: string,
+  signature: string,
+  publicKey: string
+): Promise<boolean> => {
+  try {
+    const pubKey = PublicKey.fromString(publicKey);
+    const mess = Buffer.from(message);
+    const sig = Buffer.from(signature);
+
+    const verified = pubKey.verify(mess, sig);
+
+    return verified;
+  } catch (error) {
+    logger.error(`Error verifying campaign signature: ${error}`);
+    return false;
+  }
+};
+
+/**
+ * Verify topic exists on the Hedera network
+ *
+ * @param {string} topicId - Topic ID to verify
+ * @param {Client} client - Hedera client instance
+ * @returns {Promise<boolean>} Whether the topic exists
+ */
+export const verifyTopicExists = async (
+  topicId: string,
+  client: Client
+): Promise<boolean> => {
+  try {
+    const topicInfo = await new TopicInfoQuery()
+      .setTopicId(TopicId.fromString(topicId))
+      .execute(client);
+
+    return !!topicInfo.topicId;
+  } catch (error) {
+    logger.error(`Error verifying topic exists: ${error}`);
+    return false;
+  }
+};
+
+/**
+ * Create a new campaign from verified message data
+ *
+ * @param {ParsedCampaignData} campaignData - Parsed campaign data
+ * @returns {Promise<{success: boolean, campaign?: any, error?: string}>} Result of campaign creation
+ */
+export const createCampaign = async (
+  campaignData: ParsedCampaignData
+): Promise<{ success: boolean; campaign?: any; error?: string }> => {
+  try {
+    // Create the campaign record
+    const campaign = await CampaignModel.create({
+      topicId: campaignData.topicId,
+      name: campaignData.name,
+      accountId: campaignData.accountId,
+      prizePool: campaignData.prizePool,
+      requirement: campaignData.requirement,
+      txId: campaignData.txId,
+    });
+
+    return {
+      success: true,
+      campaign: campaign.toJSON(),
+    };
+  } catch (error: any) {
+    logger.error(`Error creating campaign: ${error.message}`);
+    return {
+      success: false,
+      error: error.message,
+    };
   }
 };

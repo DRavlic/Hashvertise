@@ -5,9 +5,14 @@ import {
   getTopicStatus,
   getTopicMessages as getTopicMessagesService,
   deactivateTopicListener as deactivateTopicListenerService,
+  parseCampaignMessage,
+  verifyCampaignSignature,
+  verifyTopicExists,
+  createCampaign,
 } from "./topic.service";
 import logger from "../common/common.instances";
 import { DEFAULT_TOPIC_MESSAGES_LIMIT } from "./topic.constants";
+import { UserModel } from "../common/common.model";
 
 /**
  * Set up a topic listener for a Hedera topic
@@ -123,6 +128,100 @@ export const deactivateTopicListener = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     logger.error("Error in deactivateTopicListener controller:", error);
+
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      error: "Internal server error",
+      details: error.message || String(error),
+    });
+  }
+};
+
+/**
+ * Verify campaign signature and create a campaign
+ *
+ * @param {Request} req - Express request object containing message and signature
+ * @param {Response} res - Express response object
+ * @returns {Promise<Response>} HTTP response with campaign verification result
+ */
+export const verifyCampaignAndCreate = async (req: Request, res: Response) => {
+  try {
+    const { message, signature } = req.body;
+    const hederaClient = req.app.locals.hederaClient;
+
+    // Parse the campaign data from the message
+    const campaignData = parseCampaignMessage(message);
+    if (!campaignData) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        error: "Invalid message format",
+      });
+    }
+
+    // Find the user by accountId
+    const user = await UserModel.findOne({ accountId: campaignData.accountId });
+    if (!user) {
+      return res.status(StatusCodes.UNAUTHORIZED).json({
+        success: false,
+        error: "User not found",
+      });
+    }
+
+    // Verify the signature
+    const isSignatureValid = await verifyCampaignSignature(
+      message,
+      signature,
+      user.publicKey
+    );
+
+    if (!isSignatureValid) {
+      return res.status(StatusCodes.UNAUTHORIZED).json({
+        success: false,
+        error: "Invalid signature",
+      });
+    }
+
+    // Verify the topic exists
+    const topicExists = await verifyTopicExists(
+      campaignData.topicId,
+      hederaClient
+    );
+    if (!topicExists) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        error: "Topic does not exist",
+      });
+    }
+
+    // Create the campaign
+    const createResult = await createCampaign(campaignData);
+    if (!createResult.success) {
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        error: "Failed to create campaign",
+        details: createResult.error,
+      });
+    }
+
+    // Set up the topic listener
+    const listenerResult = await setupHederaTopicListenerService(
+      campaignData.topicId,
+      hederaClient
+    );
+
+    if (!listenerResult.success) {
+      // If setting up listener fails, still return success since the campaign was created
+      logger.warn(
+        `Failed to set up listener for campaign: ${listenerResult.error}`
+      );
+    }
+
+    return res.status(StatusCodes.CREATED).json({
+      success: true,
+      campaign: createResult.campaign,
+      message: "Campaign created successfully",
+    });
+  } catch (error: any) {
+    logger.error("Error in verifyCampaignAndCreate controller:", error);
 
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       error: "Internal server error",
