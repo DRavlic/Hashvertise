@@ -87,18 +87,11 @@ export const getTopicMessages = async (req: Request, res: Response) => {
     const limit =
       (req.query.limit as unknown as number) || DEFAULT_TOPIC_MESSAGES_LIMIT;
 
-    const result = await getTopicMessagesService(topicId, limit);
-
-    if (!result.success) {
-      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        error: result.error,
-        details: result.details,
-      });
-    }
+    const messages = await getTopicMessagesService(topicId, limit);
 
     return res.status(StatusCodes.OK).json({
       success: true,
-      messages: result.messages,
+      messages,
     });
   } catch (error: any) {
     logger.error("Error in getTopicMessages controller:", error);

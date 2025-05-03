@@ -16,3 +16,7 @@ export const DB =
 export const HEDERA_OPERATOR_ID = process.env.HEDERA_OPERATOR_ID || "";
 export const HEDERA_OPERATOR_KEY = process.env.HEDERA_OPERATOR_KEY || "";
 export const HEDERA_NETWORK = process.env.HEDERA_NETWORK || "testnet";
+
+// Hedera consensus topic configuration
+export const CHUNK_SIZE = 1024; // 1KB
+export const TOPIC_SYNC_INTERVAL = 5000; // 5 seconds

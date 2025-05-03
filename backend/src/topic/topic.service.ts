@@ -1,13 +1,9 @@
-import {
-  Client,
-  TopicId,
-  setupTopicListener,
-  SubscriptionHandle,
-} from "@hashvertise/crypto";
+import { Client, TopicId, SubscriptionHandle } from "@hashgraph/sdk";
 import { TopicListenerModel, TopicMessageModel } from "./topic.model";
 import logger from "../common/common.instances";
 import { DEFAULT_TOPIC_MESSAGES_LIMIT } from "./topic.constants";
 import { TopicListenResponse, TopicStatusResponse } from "./topic.interfaces";
+import { setupTopicListener } from "../common/common.hedera";
 
 // Store active subscriptions in memory
 // Note: this will be lost on server restart but we'll recover them from the database
@@ -34,7 +30,12 @@ const handleTopicMessage = async (
     });
     logger.info(`Saved new message for topic ${topicId}`);
   } catch (error: any) {
-    logger.error(`Error saving message for topic ${topicId}: ${error.message}`);
+    logger.error(
+      `Error saving new message for topic ${topicId}: ${error.message}`
+    );
+    throw new Error(
+      `Error saving new message for topic ${topicId}: ${error.message}`
+    );
   }
 };
 
@@ -89,6 +90,7 @@ export const initializeTopicListeners = async (
     logger.info("Topic listener initialization complete");
   } catch (error: any) {
     logger.error(`Error initializing topic listeners: ${error.message}`);
+    throw new Error(`Error initializing topic listeners: ${error.message}`);
   }
 };
 
@@ -143,8 +145,6 @@ export const setupHederaTopicListener = async (
       message: `Started listening to topic: ${topicId}`,
     };
   } catch (error: any) {
-    logger.error(`Error in setupHederaTopicListener: ${error.message}`);
-
     // Clean up if needed
     if (activeSubscriptions.has(topicId)) {
       try {
@@ -160,11 +160,8 @@ export const setupHederaTopicListener = async (
       }
     }
 
-    return {
-      success: false,
-      error: "Failed to set up topic listener",
-      details: error.message || String(error),
-    };
+    logger.error(`Error setting up topic listener: ${error.message}`);
+    throw new Error(`Error setting up topic listener: ${error.message}`);
   }
 };
 
@@ -193,9 +190,11 @@ export const getTopicStatus = async (
       topicId,
       isActive,
     };
-  } catch (error) {
+  } catch (error: any) {
     logger.error(`Error checking status for topic ${topicId}:`, error);
-    throw error;
+    throw new Error(
+      `Error checking status for topic ${topicId}: ${error.message}`
+    );
   }
 };
 
@@ -216,20 +215,14 @@ export const getTopicMessages = async (
       .sort({ consensusTimestamp: -1 })
       .limit(limit);
 
-    return {
-      success: true,
-      messages,
-    };
+    return messages;
   } catch (error: any) {
     logger.error(
       `Error retrieving messages for topic ${topicId}: ${error.message}`
     );
-
-    return {
-      success: false,
-      error: "Failed to retrieve topic messages",
-      details: error.message || String(error),
-    };
+    throw new Error(
+      `Error retrieving messages for topic ${topicId}: ${error.message}`
+    );
   }
 };
 
@@ -262,8 +255,8 @@ export const deactivateTopicListener = async (
     }
 
     logger.info(`Deactivated topic listener for ${topicId}`);
-  } catch (error) {
+  } catch (error: any) {
     logger.error(`Error deactivating topic ${topicId}:`, error);
-    throw error;
+    throw new Error(`Error deactivating topic ${topicId}: ${error.message}`);
   }
 };

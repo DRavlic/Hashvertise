@@ -13,14 +13,8 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "baseUrl": "./", 
-    "paths": {
-      "@hashvertise/crypto": ["../crypto/src"]
-    }
+    "baseUrl": "./"
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"],
-  "references": [
-    { "path": "../crypto" }
-  ]
+  "exclude": ["node_modules", "dist"]
 }

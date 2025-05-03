@@ -15,7 +15,7 @@ const main = async () => {
     logger.info("Initializing topic listeners...");
     await initializeTopicListeners(app.locals.hederaClient);
   } catch (error) {
-    logger.error("MongoDB connection error:", error);
+    logger.error("Error at starting the server:", error);
     process.exit(1);
   }
 

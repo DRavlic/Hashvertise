@@ -3,18 +3,15 @@
   "private": true,
   "workspaces": [
     "frontend",
-    "backend",
-    "crypto"
+    "backend"
   ],
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:frontend": "npm run dev --workspace=frontend",
     "dev:backend": "npm run dev --workspace=backend",
-    "dev:crypto": "npm run dev --workspace=crypto",
-    "build:crypto": "npm run build --workspace=crypto",
     "build:frontend": "npm run build --workspace=frontend",
     "build:backend": "npm run build --workspace=backend",
-    "build": "npm run build:crypto && npm run build:backend && npm run build:frontend",
+    "build": "npm run build:backend && npm run build:frontend",
     "start:frontend": "npm run start --workspace=frontend",
     "start:backend": "npm run start --workspace=backend"
   },
