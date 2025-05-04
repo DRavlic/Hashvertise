@@ -61,22 +61,22 @@ export function CreateCampaign() {
       }
 
       // Send the message and signature to the backend
-      const response = await fetch("/api/topic/campaign/verify", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message,
-          signature,
-        }),
-      });
+      //   const response = await fetch("/api/topic/campaign/verify", {
+      //     method: "POST",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //     },
+      //     body: JSON.stringify({
+      //       message,
+      //       signature,
+      //     }),
+      //   });
 
-      const data = await response.json();
+      //   const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to verify campaign");
-      }
+      //   if (!response.ok) {
+      //     throw new Error(data.error || "Failed to verify campaign");
+      //   }
 
       // If successful, navigate to the home page and show a success message
       navigate("/");
