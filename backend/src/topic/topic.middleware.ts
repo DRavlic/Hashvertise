@@ -9,14 +9,13 @@ import logger from "../common/common.instances";
  * @returns {Function} Middleware function that validates request against schema
  */
 export const validate =
-  (schema: AnyZodObject) =>
+  (schema: AnyZodObject): Function =>
   /**
    * Validates request body, query, and params against the provided schema
    *
    * @param {Request} req - Express request object
    * @param {Response} res - Express response object
    * @param {NextFunction} next - Express next function
-   * @returns {void | Response} Continues to next middleware or returns validation error
    */
   (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -27,10 +26,10 @@ export const validate =
       });
       next();
     } catch (error: any) {
-      logger.error("Request validation error:", error);
+      logger.error("Request validation error: " + error);
       return res.status(400).json({
         error: "Validation failed",
-        details: error.errors,
+        details: JSON.stringify(error),
       });
     }
   };
