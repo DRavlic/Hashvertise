@@ -49,8 +49,7 @@ export function CreateCampaign() {
 
       const { topicId, txId } = topicResponse;
 
-      const messageContent = `${txId}, ${topicId}, ${formData.name}, ${accountId}, ${formData.prizePool}, ${formData.requirement}`;
-      const message = `Hashvertise signed message(${messageContent.length}): ${messageContent}`;
+      const message = `${txId}, ${topicId}, ${formData.name}, ${accountId}, ${formData.prizePool}, ${formData.requirement}`;
 
       const signature = await signMessage(message);
 
@@ -61,28 +60,31 @@ export function CreateCampaign() {
       }
 
       // Send the message and signature to the backend
-      //   const response = await fetch("/api/topic/campaign/verify", {
-      //     method: "POST",
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //     },
-      //     body: JSON.stringify({
-      //       message,
-      //       signature,
-      //     }),
-      //   });
+      const response = await fetch(
+        "http://localhost:3200/api/topic/campaign/verify", // TO DO: change to environment variable for backend url
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message,
+            signature,
+          }),
+        }
+      );
 
-      //   const data = await response.json();
+      const data = await response.json();
 
-      //   if (!response.ok) {
-      //     throw new Error(data.error || "Failed to verify campaign");
-      //   }
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to verify campaign");
+      }
 
       // If successful, navigate to the home page and show a success message
       navigate("/");
       showSuccess("Campaign created successfully");
     } catch (error) {
-      console.error("Error creating campaign:", error);
+      console.error("Error creating campaign:" + error);
       showError(
         `Error creating campaign: ${
           error instanceof Error ? error.message : "Unknown error"

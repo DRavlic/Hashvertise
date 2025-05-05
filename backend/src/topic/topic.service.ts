@@ -280,20 +280,9 @@ export const parseCampaignMessage = (
   message: string
 ): ParsedCampaignData | null => {
   try {
-    // Extract the actual content from the message format
-    // Format: "Hashvertise signed message({length}): {content}"
-    const contentMatch = message.match(
-      /Hashvertise signed message\(\d+\): (.*)/
-    );
-    if (!contentMatch || !contentMatch[1]) {
-      return null;
-    }
-
-    const content = contentMatch[1];
-
-    // Parse the comma-separated values
+    // Parse the comma-separated values directly from the message
     const [txId, topicId, name, accountId, prizePoolStr, requirement] =
-      content.split(", ");
+      message.split(", ");
 
     // Convert prize pool to number
     const prizePool = parseInt(prizePoolStr);
@@ -338,10 +327,13 @@ export const verifyCampaignSignature = async (
   publicKey: string
 ): Promise<boolean> => {
   try {
-    const pubKey = PublicKey.fromString(publicKey);
+    // Hashconnect adds a prefix to the message before signing, so we need to do the same
+    message = "\x19Hedera Signed Message:\n" + message.length + message;
     const mess = Buffer.from(message);
-    const sig = Buffer.from(signature);
+    const sig = Buffer.from(signature, "base64");
 
+    // Verify the signature
+    const pubKey = PublicKey.fromString(publicKey);
     const verified = pubKey.verify(mess, sig);
 
     return verified;
