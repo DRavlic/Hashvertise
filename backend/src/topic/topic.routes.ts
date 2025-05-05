@@ -5,6 +5,7 @@ import {
   getTopicMessages,
   deactivateTopicListener,
   verifyCampaignAndCreate,
+  getCampaigns,
 } from "./topic.controller";
 import { validate } from "./topic.middleware";
 import {
@@ -13,6 +14,7 @@ import {
   topicMessagesSchema,
   topicDeactivateSchema,
   campaignVerifySchema,
+  campaignsListSchema,
 } from "./topic.schema";
 
 const router = express.Router();
@@ -63,5 +65,12 @@ router.post(
   validate(campaignVerifySchema),
   verifyCampaignAndCreate
 );
+
+/**
+ * @route GET /api/topic/campaigns
+ * @description Get all campaigns with pagination
+ * @access Public
+ */
+router.get("/campaigns", validate(campaignsListSchema), getCampaigns);
 
 export default router;

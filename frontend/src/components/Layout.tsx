@@ -21,7 +21,7 @@ export function Layout({ children }: LayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-secondary-50">
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
@@ -36,7 +36,7 @@ export function Layout({ children }: LayoutProps) {
                 {isPaired ? "Disconnect Wallet" : "Connect Wallet"}
               </button>
               {isPaired && (
-                <span className="text-sm text-green-600">● Connected</span>
+                <span className="text-sm text-success-600">● Connected</span>
               )}
             </div>
           </div>

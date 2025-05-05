@@ -3,6 +3,7 @@ import { WalletProvider } from "./providers/WalletProvider";
 import { Layout } from "./components/Layout";
 import { Home } from "./pages/Home";
 import { CreateCampaign } from "./pages/CreateCampaign";
+import { Campaigns } from "./pages/Campaigns";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -14,8 +15,8 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/campaign/new" element={<CreateCampaign />} />
+            <Route path="/campaigns" element={<Campaigns />} />
             {/* Add more routes as needed */}
-            {/* <Route path="/campaigns" element={<Campaigns />} /> */}
           </Routes>
         </Layout>
         <ToastContainer />

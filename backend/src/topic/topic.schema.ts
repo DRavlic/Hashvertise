@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { DEFAULT_TOPIC_MESSAGES_LIMIT } from "./topic.constants";
+import {
+  DEFAULT_TOPIC_MESSAGES_LIMIT,
+  DEFAULT_PAGE,
+  DEFAULT_CAMPAIGNS_LIMIT,
+} from "./topic.constants";
 
 // Schema for setting up a topic listener
 export const topicListenSchema = z.object({
@@ -57,4 +61,22 @@ export const campaignVerifySchema = z.object({
       required_error: "Signature is required",
     }),
   }),
+});
+
+// Campaigns list schema with pagination
+export const campaignsListSchema = z.object({
+  query: z
+    .object({
+      page: z
+        .string()
+        .optional()
+        .transform((val) => (val ? parseInt(val, 10) : DEFAULT_PAGE)),
+      limit: z
+        .string()
+        .optional()
+        .transform((val) =>
+          val ? parseInt(val, 10) : DEFAULT_CAMPAIGNS_LIMIT
+        ),
+    })
+    .optional(),
 });

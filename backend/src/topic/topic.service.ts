@@ -3,6 +3,7 @@ import {
   TopicListenerModel,
   TopicMessageModel,
   CampaignModel,
+  Campaign,
 } from "./topic.model";
 import logger from "../common/common.instances";
 import { DEFAULT_TOPIC_MESSAGES_LIMIT } from "./topic.constants";
@@ -396,5 +397,39 @@ export const createCampaign = async (
       success: false,
       error: error.message,
     };
+  }
+};
+
+/**
+ * Count all campaigns
+ * @returns {Promise<number>} Total number of campaigns
+ */
+export const countCampaigns = async (): Promise<number> => {
+  try {
+    return await CampaignModel.countDocuments();
+  } catch (error) {
+    logger.error("Error counting campaigns:", error);
+    throw error;
+  }
+};
+
+/**
+ * Get all campaigns with pagination
+ * @param {number} skip Number of campaigns to skip
+ * @param {number} limit Maximum number of campaigns to return
+ * @returns {Promise<Campaign[]>} Array of campaigns
+ */
+export const listCampaigns = async (
+  skip: number,
+  limit: number
+): Promise<Campaign[]> => {
+  try {
+    return await CampaignModel.find()
+      .sort({ createdAt: -1 }) // Sort by newest first
+      .skip(skip)
+      .limit(limit);
+  } catch (error) {
+    logger.error("Error listing campaigns: " + error);
+    throw error;
   }
 };

@@ -9,9 +9,15 @@ import {
   verifyCampaignSignature,
   verifyTopicExists,
   createCampaign,
+  countCampaigns,
+  listCampaigns,
 } from "./topic.service";
 import logger from "../common/common.instances";
-import { DEFAULT_TOPIC_MESSAGES_LIMIT } from "./topic.constants";
+import {
+  DEFAULT_TOPIC_MESSAGES_LIMIT,
+  DEFAULT_PAGE,
+  DEFAULT_CAMPAIGNS_LIMIT,
+} from "./topic.constants";
 import { UserModel } from "../common/common.model";
 
 /**
@@ -238,6 +244,41 @@ export const verifyCampaignAndCreate = async (
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       error: "Internal server error",
       details: error.message || String(error),
+    });
+  }
+};
+
+/**
+ * @route GET /api/topic/campaigns
+ * @description Get all campaigns with pagination
+ * @access Public
+ */
+export const getCampaigns = async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string) || DEFAULT_PAGE;
+    const limit =
+      parseInt(req.query.limit as string) || DEFAULT_CAMPAIGNS_LIMIT;
+    const skip = (page - 1) * limit;
+
+    // Get total count for pagination
+    const total = await countCampaigns();
+
+    // Get campaigns for current page
+    const campaigns = await listCampaigns(skip, limit);
+
+    return res.status(StatusCodes.OK).json({
+      success: true,
+      campaigns,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    });
+  } catch (error) {
+    logger.error("Error getting campaigns: " + error);
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      error: "Internal server error",
     });
   }
 };

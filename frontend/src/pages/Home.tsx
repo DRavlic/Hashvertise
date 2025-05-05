@@ -7,7 +7,7 @@ export function Home() {
         <h1 className="text-4xl font-bold text-primary-600 mb-4">
           Hashvertise
         </h1>
-        <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+        <p className="text-xl text-secondary-600 mb-8 max-w-3xl mx-auto">
           Decentralized advertising platform built on the Hedera network
         </p>
 
@@ -20,7 +20,7 @@ export function Home() {
           </Link>
           <Link
             to="/campaigns"
-            className="px-6 py-3 bg-white text-primary-600 font-medium rounded-md border border-primary-600 hover:bg-gray-50 transition-colors"
+            className="px-6 py-3 bg-white text-primary-600 font-medium rounded-md border border-primary-600 hover:bg-secondary-50 transition-colors"
           >
             Browse Campaigns
           </Link>
@@ -28,42 +28,42 @@ export function Home() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-12">
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-800 mb-3">
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-secondary-200">
+          <h3 className="text-lg font-semibold text-secondary-800 mb-3">
             Decentralized
           </h3>
-          <p className="text-gray-600">
+          <p className="text-secondary-600">
             All campaigns are stored on the Hedera distributed ledger, ensuring
             transparency and immutability.
           </p>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-800 mb-3">
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-secondary-200">
+          <h3 className="text-lg font-semibold text-secondary-800 mb-3">
             Verifiable
           </h3>
-          <p className="text-gray-600">
+          <p className="text-secondary-600">
             Social media promotions can be verified on-chain, ensuring authentic
             engagement and fair rewards.
           </p>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-800 mb-3">
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-secondary-200">
+          <h3 className="text-lg font-semibold text-secondary-800 mb-3">
             Cost-Effective
           </h3>
-          <p className="text-gray-600">
+          <p className="text-secondary-600">
             Leverage Hedera's low transaction costs for affordable advertising
             campaigns with real impact.
           </p>
         </div>
       </div>
 
-      <div className="bg-gray-50 p-8 rounded-lg border border-gray-200 my-8">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+      <div className="bg-secondary-50 p-8 rounded-lg border border-secondary-200 my-8">
+        <h2 className="text-2xl font-semibold text-secondary-800 mb-4">
           How It Works
         </h2>
-        <ol className="list-decimal list-inside space-y-4 text-gray-600">
+        <ol className="list-decimal list-inside space-y-4 text-secondary-600">
           <li>Connect your Hedera wallet (HashPack or Blade)</li>
           <li>Create and sign your advertising campaign</li>
           <li>Your campaign is stored on the Hedera network</li>

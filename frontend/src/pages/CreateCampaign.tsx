@@ -100,7 +100,7 @@ export function CreateCampaign() {
       </h1>
 
       {!isPaired && (
-        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-700">
+        <div className="mb-6 p-4 bg-warning-50 border border-warning-200 rounded-md text-warning-700">
           Please connect your wallet first to create a campaign.
         </div>
       )}
@@ -109,7 +109,7 @@ export function CreateCampaign() {
         <div>
           <label
             htmlFor="name"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-secondary-700 mb-1"
           >
             Campaign Name
           </label>
@@ -120,7 +120,7 @@ export function CreateCampaign() {
             value={formData.name}
             onChange={handleChange}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-secondary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             placeholder="Enter campaign name"
           />
         </div>
@@ -128,7 +128,7 @@ export function CreateCampaign() {
         <div>
           <label
             htmlFor="prizePool"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-secondary-700 mb-1"
           >
             Prize Pool (USD)
           </label>
@@ -141,7 +141,7 @@ export function CreateCampaign() {
             value={formData.prizePool || ""}
             onChange={handleChange}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-secondary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             placeholder="Enter prize amount in USD"
           />
         </div>
@@ -149,7 +149,7 @@ export function CreateCampaign() {
         <div>
           <label
             htmlFor="requirement"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-secondary-700 mb-1"
           >
             Requirement Text
           </label>
@@ -160,7 +160,7 @@ export function CreateCampaign() {
             onChange={handleChange}
             required
             rows={4}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-secondary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             placeholder="Enter text that promoters need to include in their post"
           />
         </div>
@@ -168,7 +168,7 @@ export function CreateCampaign() {
         <button
           type="submit"
           disabled={isSubmitting || !isPaired}
-          className="w-full px-6 py-3 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+          className="w-full px-6 py-3 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 transition-colors disabled:bg-secondary-400 disabled:cursor-not-allowed"
         >
           {isSubmitting ? "Creating Campaign..." : "Create Campaign"}
         </button>
