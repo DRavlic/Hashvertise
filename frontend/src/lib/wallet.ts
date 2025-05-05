@@ -3,7 +3,8 @@ import {
   HashConnectConnectionState,
   SessionData,
 } from "hashconnect";
-import { APP_METADATA, WALLET_CONNECT_PROJECT_ID } from "./constants";
+import { APP_METADATA } from "./constants";
+import { WALLET_CONNECT_PROJECT_ID } from "./environment";
 import {
   AccountId,
   LedgerId,

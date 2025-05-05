@@ -4,6 +4,7 @@ import { useWallet } from "../hooks/useWallet";
 import { createTopic, signMessage } from "../lib/wallet";
 import { showError, showSuccess } from "../lib/toast";
 import { HashConnectConnectionState } from "hashconnect";
+import { API_ENDPOINTS } from "../lib/environment";
 
 interface CampaignFormData {
   name: string;
@@ -60,19 +61,16 @@ export function CreateCampaign() {
       }
 
       // Send the message and signature to the backend
-      const response = await fetch(
-        "http://localhost:3200/api/topic/campaign/verify", // TO DO: change to environment variable for backend url
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            message,
-            signature,
-          }),
-        }
-      );
+      const response = await fetch(API_ENDPOINTS.VERIFY_CAMPAIGN, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message,
+          signature,
+        }),
+      });
 
       const data = await response.json();
 
