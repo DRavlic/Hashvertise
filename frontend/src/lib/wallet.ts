@@ -207,10 +207,11 @@ export async function submitTopicMessage(message: string, topicId: string) {
       .freezeWithSigner(signer);
 
     const response = await tx.executeWithSigner(signer);
+    const record = await response.getRecordWithSigner(signer);
 
     showSuccess("Message submitted successfully");
 
-    return response; // TO DO: return tx ID or something else than response
+    return record.consensusTimestamp.toString();
   } catch (error) {
     showError(`Error submitting topic message: ${getErrorMessage(error)}`);
     console.error("Error submitting topic message: " + error);
