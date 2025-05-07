@@ -15,6 +15,7 @@ import {
 } from "./topic.interfaces";
 import { setupTopicListener } from "../common/common.hedera";
 import { PublicKey, TopicInfoQuery } from "@hashgraph/sdk";
+import { createUtcDate } from "../common/common.dates";
 
 // Store active subscriptions in memory
 // Note: this will be lost on server restart but we'll recover them from the database
@@ -25,13 +26,13 @@ const activeSubscriptions = new Map<string, SubscriptionHandle>();
  *
  * @param {string} topicId - The ID of the topic receiving the message
  * @param {string} message - The message content
- * @param {Date} timestamp - The consensus timestamp
+ * @param {Date} hederaTimestamp - The consensus timestamp
  * @returns {Promise<void>}
  */
 const handleTopicMessage = async (
   topicId: string,
   message: string,
-  timestamp: Date
+  hederaTimestamp: Date
 ): Promise<void> => {
   try {
     // Parse the message in format: "<accountId>, <XHandle>"
@@ -56,10 +57,13 @@ const handleTopicMessage = async (
       return;
     }
 
+    // Ensure the timestamp is in UTC format
+    const utcTimestamp = createUtcDate(hederaTimestamp);
+
     await TopicMessageModel.create({
       topicId,
       message,
-      consensusTimestamp: timestamp,
+      consensusTimestamp: utcTimestamp,
     });
     logger.info(`Saved new message for topic ${topicId}`);
   } catch (error: any) {

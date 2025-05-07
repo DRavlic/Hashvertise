@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { API_ENDPOINTS } from "../lib/environment";
 import { showError } from "../lib/toast";
 import { CAMPAIGNS_PER_PAGE } from "../lib/constants";
+import { formatUtcDate } from "../lib/date";
 
 interface Campaign {
   _id: string;
@@ -99,7 +100,7 @@ export function Campaigns() {
                   {campaign.name}
                 </h3>
                 <div className="text-sm text-secondary-500 mb-3">
-                  Created: {new Date(campaign.createdAt).toLocaleDateString()}
+                  Created: {formatUtcDate(campaign.createdAt)}
                 </div>
                 <div className="mb-4">
                   <div className="font-medium text-success-600">

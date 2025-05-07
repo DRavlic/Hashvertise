@@ -1,8 +1,9 @@
 import { toast, ToastOptions } from "react-toastify";
+import { TOAST_DURATION_MS } from "./constants";
 
 const defaultOptions: ToastOptions = {
   position: "bottom-right",
-  autoClose: 5000,
+  autoClose: TOAST_DURATION_MS,
   hideProgressBar: false,
   closeOnClick: true,
   pauseOnHover: true,

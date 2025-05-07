@@ -10,6 +10,7 @@ import {
 } from "../lib/constants";
 import { showError, showSuccess } from "../lib/toast";
 import { submitTopicMessage } from "../lib/wallet";
+import { formatUtcDate, formatUtcDateTime } from "../lib/date";
 
 interface Campaign {
   _id: string;
@@ -227,7 +228,7 @@ export function CampaignDetails() {
 
             <div className="flex items-center text-sm text-secondary-500 mb-4">
               <span className="mr-4">
-                Created: {new Date(campaign.createdAt).toLocaleDateString()}
+                Created: {formatUtcDate(campaign.createdAt)}
               </span>
               <span>Topic ID: {campaign.topicId}</span>
             </div>
@@ -324,7 +325,7 @@ export function CampaignDetails() {
                       {message.message}
                     </div>
                     <div className="text-xs text-secondary-500 mt-1">
-                      {new Date(message.consensusTimestamp).toLocaleString()}
+                      {formatUtcDateTime(message.consensusTimestamp)}
                     </div>
                   </li>
                 ))}
