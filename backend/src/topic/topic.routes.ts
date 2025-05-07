@@ -6,7 +6,6 @@ import {
   deactivateTopicListener,
   verifyCampaignAndCreate,
   getCampaigns,
-  verifyTopicMessageSubmission,
   getCampaign,
 } from "./topic.controller";
 import { validate } from "./topic.middleware";
@@ -17,7 +16,6 @@ import {
   topicDeactivateSchema,
   campaignVerifySchema,
   campaignsListSchema,
-  topicMessageVerifySchema,
   campaignGetSchema,
 } from "./topic.schema";
 
@@ -76,17 +74,6 @@ router.post(
  * @access Public
  */
 router.get("/campaigns", validate(campaignsListSchema), getCampaigns);
-
-/**
- * @route POST /api/topic/message/verify
- * @description Verify a topic message submission
- * @access Public
- */
-router.post(
-  "/message/verify",
-  validate(topicMessageVerifySchema),
-  verifyTopicMessageSubmission
-);
 
 /**
  * @route GET /api/topic/campaign/:topicId

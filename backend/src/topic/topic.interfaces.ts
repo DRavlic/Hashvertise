@@ -32,7 +32,6 @@ export interface ParsedCampaignData {
  * Parsed topic message data
  */
 export interface ParsedTopicMessageData {
-  topicId: string;
-  consensusTimestamp: string;
-  message: string;
+  accountId: string;
+  XHandle: string;
 }

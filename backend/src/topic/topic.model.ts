@@ -35,7 +35,7 @@ export class TopicMessage {
   @prop({ required: true, index: true })
   public topicId!: string;
 
-  @prop({ required: true })
+  @prop({ required: true, unique: true })
   public message!: string;
 
   @prop()

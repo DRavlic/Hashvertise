@@ -19,16 +19,7 @@ export class User {
   public accountId!: string;
 
   @prop({ required: true, unique: true })
-  public username!: string;
-
-  @prop({ required: true, unique: true })
-  public email!: string;
-
-  @prop({ required: true, unique: true })
   public publicKey!: string;
-
-  @prop({ required: true })
-  public hashedPassword!: string;
 }
 
 export const UserModel = getModelForClass(User);

@@ -81,18 +81,6 @@ export const campaignsListSchema = z.object({
     .optional(),
 });
 
-// Schema for topic message verification
-export const topicMessageVerifySchema = z.object({
-  body: z.object({
-    message: z.string({
-      required_error: "Message is required",
-    }),
-    signature: z.string({
-      required_error: "Signature is required",
-    }),
-  }),
-});
-
 // Schema for getting a campaign by topic ID
 export const campaignGetSchema = z.object({
   params: z.object({

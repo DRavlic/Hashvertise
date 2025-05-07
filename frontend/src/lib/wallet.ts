@@ -206,16 +206,15 @@ export async function submitTopicMessage(message: string, topicId: string) {
       .setMessage(message)
       .freezeWithSigner(signer);
 
-    const response = await tx.executeWithSigner(signer);
-    const record = await response.getRecordWithSigner(signer);
+    await tx.executeWithSigner(signer);
 
     showSuccess("Message submitted successfully");
 
-    return record.consensusTimestamp.toString();
+    return true;
   } catch (error) {
     showError(`Error submitting topic message: ${getErrorMessage(error)}`);
     console.error("Error submitting topic message: " + error);
-    return null;
+    return false;
   }
 }
 

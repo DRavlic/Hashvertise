@@ -27,7 +27,7 @@ interface TopicMessage {
 
 export function CampaignDetails() {
   const { topicId } = useParams<{ topicId: string }>();
-  const { connectionStatus } = useWallet();
+  const { connectionStatus, accountId } = useWallet();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [messages, setMessages] = useState<TopicMessage[]>([]);
   const [twitterHandle, setTwitterHandle] = useState("");
@@ -92,7 +92,7 @@ export function CampaignDetails() {
     }
 
     if (!twitterHandle.trim()) {
-      showError("Please enter your Twitter handle");
+      showError("Please enter your X handle");
       return;
     }
 
@@ -116,52 +116,26 @@ export function CampaignDetails() {
       }
 
       // Submit topic message
-      const consensusTimestamp = await submitTopicMessage(
-        twitterHandle,
+      const submitResult = await submitTopicMessage(
+        `${accountId}, ${twitterHandle}`,
         topicId
       );
 
-      if (!consensusTimestamp) {
+      if (!submitResult) {
         // If submitTopicMessage returns null, it already showed error messages
         setIsSubmitting(false);
         return;
       }
 
-      // Create message for signature
-      const message = `${topicId}, ${consensusTimestamp}, ${twitterHandle}`;
-
-      // Sign the message
-      const signature = await signMessage(message);
-
-      if (!signature) {
-        // If signMessage returns null, it already showed error messages
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Verify the message with backend
-      const response = await fetch(API_ENDPOINTS.VERIFY_TOPIC_MESSAGE, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message,
-          signature,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to verify message");
-      }
-
-      showSuccess("Successfully applied to the campaign!");
+      showSuccess(
+        "Successfully applied to the campaign if you provided CORRECT X handle!"
+      );
       setTwitterHandle("");
 
-      // Refresh messages list
-      setRefreshTrigger((prev) => prev + 1);
+      // Refresh messages list after 5 seconds to give backend time to process the message
+      setTimeout(() => {
+        setRefreshTrigger((prev) => prev + 1);
+      }, 5000);
     } catch (error) {
       console.error("Error applying to campaign:", error);
       showError(

@@ -34,14 +34,25 @@ const handleTopicMessage = async (
   timestamp: Date
 ): Promise<void> => {
   try {
-    // Check if this exact message already exists for this topic
-    const existingMessage = await TopicMessageModel.findOne({
+    // Parse the message in format: "<accountId>, <XHandle>"
+    const parsedMessage = parseTopicMessage(message);
+    if (!parsedMessage) {
+      logger.info(`Invalid message format: "${message}", skipping...`);
+      return;
+    }
+
+    // TO DO: Check if this X handle actually exists on X
+
+    // Check if this X handle already exists for this topic
+    const existingXHandle = await TopicMessageModel.findOne({
       topicId,
-      message,
+      message: { $regex: `, ${parsedMessage.XHandle}$` },
     });
 
-    if (existingMessage) {
-      logger.info(`Duplicate message ignored for topic ${topicId}: ${message}`);
+    if (existingXHandle) {
+      logger.info(
+        `Duplicate X handle ${parsedMessage.XHandle} ignored for topic ${topicId}, skipping...`
+      );
       return;
     }
 
@@ -58,6 +69,32 @@ const handleTopicMessage = async (
     throw new Error(
       `Error saving new message for topic ${topicId}: ${error.message}`
     );
+  }
+};
+
+/**
+ * Parse topic message data from a message
+ *
+ * @param {string} message - The message content to parse
+ * @returns {ParsedTopicMessageData | null} Parsed topic message data or null if parsing fails
+ */
+const parseTopicMessage = (message: string): ParsedTopicMessageData | null => {
+  try {
+    // Parse the comma-separated values from the message
+    const [accountId, XHandle] = message.split(", ");
+
+    // Validate all required fields are present
+    if (!accountId || !XHandle) {
+      return null;
+    }
+
+    return {
+      accountId,
+      XHandle,
+    };
+  } catch (error) {
+    logger.error(`Error parsing topic message: ${error}`);
+    return null;
   }
 };
 
@@ -443,70 +480,6 @@ export const listCampaigns = async (
   } catch (error) {
     logger.error("Error listing campaigns: " + error);
     throw error;
-  }
-};
-
-/**
- * Parse topic message data from a message
- *
- * @param {string} message - The message content to parse
- * @returns {ParsedTopicMessageData | null} Parsed topic message data or null if parsing fails
- */
-export const parseTopicMessage = (
-  message: string
-): ParsedTopicMessageData | null => {
-  try {
-    // Parse the comma-separated values from the message
-    const [topicId, consensusTimestamp, twitterHandle] = message.split(", ");
-
-    // Validate all required fields are present
-    if (!topicId || !consensusTimestamp || !twitterHandle) {
-      return null;
-    }
-
-    return {
-      topicId,
-      consensusTimestamp,
-      message: twitterHandle,
-    };
-  } catch (error) {
-    logger.error(`Error parsing topic message: ${error}`);
-    return null;
-  }
-};
-
-/**
- * Verify a topic message exists with the given information
- *
- * @param {ParsedTopicMessageData} messageData - Parsed topic message data
- * @returns {Promise<boolean>} Whether the message exists in the database
- */
-export const verifyTopicMessage = async (
-  messageData: ParsedTopicMessageData
-): Promise<boolean> => {
-  try {
-    // Convert consensus timestamp string to Date
-    const timestamp = new Date(messageData.consensusTimestamp);
-
-    // Allow a small time window around the claimed timestamp (7 seconds)
-    const startTime = new Date(timestamp.getTime() - 7000); // 7 seconds before
-    const endTime = new Date(timestamp.getTime() + 7000); // 7 seconds after
-
-    // Look for a message with the given topic ID and message content
-    // that was created around the claimed timestamp since we have topic listener running
-    const existingMessage = await TopicMessageModel.findOne({
-      topicId: messageData.topicId,
-      message: messageData.message,
-      consensusTimestamp: {
-        $gte: startTime,
-        $lte: endTime,
-      },
-    });
-
-    return !!existingMessage;
-  } catch (error) {
-    logger.error(`Error verifying topic message: ${error}`);
-    return false;
   }
 };
 
