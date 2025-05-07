@@ -11,6 +11,7 @@ import {
   TopicListenResponse,
   TopicStatusResponse,
   ParsedCampaignData,
+  ParsedTopicMessageData,
 } from "./topic.interfaces";
 import { setupTopicListener } from "../common/common.hedera";
 import { PublicKey, TopicInfoQuery } from "@hashgraph/sdk";
@@ -33,6 +34,17 @@ const handleTopicMessage = async (
   timestamp: Date
 ): Promise<void> => {
   try {
+    // Check if this exact message already exists for this topic
+    const existingMessage = await TopicMessageModel.findOne({
+      topicId,
+      message,
+    });
+
+    if (existingMessage) {
+      logger.info(`Duplicate message ignored for topic ${topicId}: ${message}`);
+      return;
+    }
+
     await TopicMessageModel.create({
       topicId,
       message,
@@ -315,14 +327,14 @@ export const parseCampaignMessage = (
 };
 
 /**
- * Verify campaign signature using HashConnect
+ * Verify signature using HashConnect
  *
  * @param {string} message - The signed message
  * @param {string} signature - The signature to verify
  * @param {string} publicKey - The public key to verify against
  * @returns {Promise<boolean>} Whether the signature is valid
  */
-export const verifyCampaignSignature = async (
+export const verifySignature = async (
   message: string,
   signature: string,
   publicKey: string
@@ -430,6 +442,86 @@ export const listCampaigns = async (
       .limit(limit);
   } catch (error) {
     logger.error("Error listing campaigns: " + error);
+    throw error;
+  }
+};
+
+/**
+ * Parse topic message data from a message
+ *
+ * @param {string} message - The message content to parse
+ * @returns {ParsedTopicMessageData | null} Parsed topic message data or null if parsing fails
+ */
+export const parseTopicMessage = (
+  message: string
+): ParsedTopicMessageData | null => {
+  try {
+    // Parse the comma-separated values from the message
+    const [topicId, consensusTimestamp, twitterHandle] = message.split(", ");
+
+    // Validate all required fields are present
+    if (!topicId || !consensusTimestamp || !twitterHandle) {
+      return null;
+    }
+
+    return {
+      topicId,
+      consensusTimestamp,
+      message: twitterHandle,
+    };
+  } catch (error) {
+    logger.error(`Error parsing topic message: ${error}`);
+    return null;
+  }
+};
+
+/**
+ * Verify a topic message exists with the given information
+ *
+ * @param {ParsedTopicMessageData} messageData - Parsed topic message data
+ * @returns {Promise<boolean>} Whether the message exists in the database
+ */
+export const verifyTopicMessage = async (
+  messageData: ParsedTopicMessageData
+): Promise<boolean> => {
+  try {
+    // Convert consensus timestamp string to Date
+    const timestamp = new Date(messageData.consensusTimestamp);
+
+    // Allow a small time window around the claimed timestamp (7 seconds)
+    const startTime = new Date(timestamp.getTime() - 7000); // 7 seconds before
+    const endTime = new Date(timestamp.getTime() + 7000); // 7 seconds after
+
+    // Look for a message with the given topic ID and message content
+    // that was created around the claimed timestamp since we have topic listener running
+    const existingMessage = await TopicMessageModel.findOne({
+      topicId: messageData.topicId,
+      message: messageData.message,
+      consensusTimestamp: {
+        $gte: startTime,
+        $lte: endTime,
+      },
+    });
+
+    return !!existingMessage;
+  } catch (error) {
+    logger.error(`Error verifying topic message: ${error}`);
+    return false;
+  }
+};
+
+/**
+ * Get a campaign by topic ID
+ * @param {string} topicId Topic ID of the campaign
+ * @returns {Promise<Campaign | null>} Campaign or null if not found
+ */
+export const getCampaignByTopicId = async (
+  topicId: string
+): Promise<Campaign | null> => {
+  try {
+    return await CampaignModel.findOne({ topicId });
+  } catch (error) {
+    logger.error(`Error getting campaign by topic ID ${topicId}: ${error}`);
     throw error;
   }
 };

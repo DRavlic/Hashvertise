@@ -7,3 +7,4 @@ export const APP_METADATA = {
 
 // Pagination constants
 export const CAMPAIGNS_PER_PAGE = 6;
+export const TOPIC_MESSAGES_PER_PAGE = 10;

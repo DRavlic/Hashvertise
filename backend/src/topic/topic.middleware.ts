@@ -6,10 +6,12 @@ import logger from "../common/common.instances";
  * Middleware factory for validating requests against Zod schemas
  *
  * @param {AnyZodObject} schema - Zod schema for request validation
- * @returns {Function} Middleware function that validates request against schema
+ * @returns {(req: Request, res: Response, next: NextFunction) => Response | void}
  */
 export const validate =
-  (schema: AnyZodObject): Function =>
+  (
+    schema: AnyZodObject
+  ): ((req: Request, res: Response, next: NextFunction) => Response | void) =>
   /**
    * Validates request body, query, and params against the provided schema
    *
@@ -17,7 +19,7 @@ export const validate =
    * @param {Response} res - Express response object
    * @param {NextFunction} next - Express next function
    */
-  (req: Request, res: Response, next: NextFunction) => {
+  (req: Request, res: Response, next: NextFunction): Response | void => {
     try {
       schema.parse({
         body: req.body,

@@ -27,3 +27,12 @@ export interface ParsedCampaignData {
   prizePool: number;
   requirement: string;
 }
+
+/**
+ * Parsed topic message data
+ */
+export interface ParsedTopicMessageData {
+  topicId: string;
+  consensusTimestamp: string;
+  message: string;
+}

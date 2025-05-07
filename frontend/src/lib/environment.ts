@@ -10,4 +10,8 @@ export const API_URL =
 export const API_ENDPOINTS = {
   VERIFY_CAMPAIGN: `${API_URL}/topic/campaign/verify`,
   GET_CAMPAIGNS: `${API_URL}/topic/campaigns`,
+  GET_CAMPAIGN: (topicId: string) => `${API_URL}/topic/campaign/${topicId}`,
+  GET_TOPIC_MESSAGES: (topicId: string) =>
+    `${API_URL}/topic/messages/${topicId}`,
+  VERIFY_TOPIC_MESSAGE: `${API_URL}/topic/message/verify`,
 };

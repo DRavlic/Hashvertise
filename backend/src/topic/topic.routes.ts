@@ -6,6 +6,8 @@ import {
   deactivateTopicListener,
   verifyCampaignAndCreate,
   getCampaigns,
+  verifyTopicMessageSubmission,
+  getCampaign,
 } from "./topic.controller";
 import { validate } from "./topic.middleware";
 import {
@@ -15,6 +17,8 @@ import {
   topicDeactivateSchema,
   campaignVerifySchema,
   campaignsListSchema,
+  topicMessageVerifySchema,
+  campaignGetSchema,
 } from "./topic.schema";
 
 const router = express.Router();
@@ -72,5 +76,23 @@ router.post(
  * @access Public
  */
 router.get("/campaigns", validate(campaignsListSchema), getCampaigns);
+
+/**
+ * @route POST /api/topic/message/verify
+ * @description Verify a topic message submission
+ * @access Public
+ */
+router.post(
+  "/message/verify",
+  validate(topicMessageVerifySchema),
+  verifyTopicMessageSubmission
+);
+
+/**
+ * @route GET /api/topic/campaign/:topicId
+ * @description Get a campaign by topic ID
+ * @access Public
+ */
+router.get("/campaign/:topicId", validate(campaignGetSchema), getCampaign);
 
 export default router;

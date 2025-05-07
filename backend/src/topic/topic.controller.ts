@@ -6,11 +6,14 @@ import {
   getTopicMessages as getTopicMessagesService,
   deactivateTopicListener as deactivateTopicListenerService,
   parseCampaignMessage,
-  verifyCampaignSignature,
+  verifySignature,
   verifyTopicExists,
   createCampaign,
   countCampaigns,
   listCampaigns,
+  parseTopicMessage,
+  verifyTopicMessage,
+  getCampaignByTopicId,
 } from "./topic.service";
 import logger from "../common/common.instances";
 import {
@@ -185,7 +188,7 @@ export const verifyCampaignAndCreate = async (
     }
 
     // Verify the signature
-    const isSignatureValid = await verifyCampaignSignature(
+    const isSignatureValid = await verifySignature(
       message,
       signature,
       user.publicKey
@@ -279,6 +282,113 @@ export const getCampaigns = async (req: Request, res: Response) => {
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
       error: "Internal server error",
+    });
+  }
+};
+
+/**
+ * Verify topic message submission
+ *
+ * @param {Request} req - Express request object containing message and signature
+ * @param {Response} res - Express response object
+ * @returns {Promise<Response>} HTTP response with verification result
+ */
+export const verifyTopicMessageSubmission = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  try {
+    const { message, signature } = req.body;
+
+    // Parse the topic message data from the message
+    const messageData = parseTopicMessage(message);
+    if (!messageData) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        error: "Invalid message format",
+      });
+    }
+
+    // Find the user by accountId
+    const user = await UserModel.findOne({ accountId: req.body.accountId });
+    if (!user) {
+      return res.status(StatusCodes.UNAUTHORIZED).json({
+        success: false,
+        error: "User not found",
+      });
+    }
+
+    // Verify the signature
+    const isSignatureValid = await verifySignature(
+      message,
+      signature,
+      user.publicKey
+    );
+
+    if (!isSignatureValid) {
+      return res.status(StatusCodes.UNAUTHORIZED).json({
+        success: false,
+        error: "Invalid signature",
+      });
+    }
+
+    // Verify the message was actually submitted to the topic
+    const isMessageVerified = await verifyTopicMessage(messageData);
+    if (!isMessageVerified) {
+      return res.status(StatusCodes.UNAUTHORIZED).json({
+        success: false,
+        error: "Message not found on topic",
+      });
+    }
+
+    return res.status(StatusCodes.OK).json({
+      success: true,
+      verified: true,
+      message: "Topic message verified successfully",
+    });
+  } catch (error: any) {
+    logger.error("Error in verifyTopicMessageSubmission controller:", error);
+
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      error: "Internal server error",
+      details: error.message || String(error),
+    });
+  }
+};
+
+/**
+ * Get a campaign by topic ID
+ *
+ * @param {Request} req - Express request object containing topicId in params
+ * @param {Response} res - Express response object
+ * @returns {Promise<Response>} HTTP response with campaign data or error
+ */
+export const getCampaign = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
+  try {
+    const { topicId } = req.params;
+
+    const campaign = await getCampaignByTopicId(topicId);
+
+    if (!campaign) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        success: false,
+        error: "Campaign not found",
+      });
+    }
+
+    return res.status(StatusCodes.OK).json({
+      success: true,
+      campaign,
+    });
+  } catch (error: any) {
+    logger.error("Error in getCampaign controller:", error);
+
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      error: "Internal server error",
+      details: error.message || String(error),
     });
   }
 };
