@@ -6,6 +6,7 @@ import { API_ENDPOINTS } from "../lib/environment";
 import {
   TOPIC_MESSAGES_PER_PAGE,
   MESSAGE_REFRESH_DELAY_MS,
+  X_HANDLE_INPUT_DELAY_MS,
 } from "../lib/constants";
 import { showError, showSuccess } from "../lib/toast";
 import { submitTopicMessage } from "../lib/wallet";
@@ -33,12 +34,22 @@ export function CampaignDetails() {
   const { connectionStatus, accountId } = useWallet();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [messages, setMessages] = useState<TopicMessage[]>([]);
-  const [twitterHandle, setTwitterHandle] = useState("");
+  const [XHandle, setXHandle] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [showXHandleInput, setShowXHandleInput] = useState(false);
 
   const isPaired = connectionStatus === HashConnectConnectionState.Paired;
+
+  useEffect(() => {
+    // Delay showing the form to prevent flashing
+    const timer = setTimeout(() => {
+      setShowXHandleInput(true);
+    }, X_HANDLE_INPUT_DELAY_MS);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (!topicId) return;
@@ -94,7 +105,7 @@ export function CampaignDetails() {
       return;
     }
 
-    if (!twitterHandle.trim()) {
+    if (!XHandle.trim()) {
       showError("Please enter your X handle");
       return;
     }
@@ -107,10 +118,15 @@ export function CampaignDetails() {
     setIsSubmitting(true);
 
     try {
-      // Check if this Twitter handle already exists in messages
-      const alreadyApplied = messages.some(
-        (msg) => msg.message.toLowerCase() === twitterHandle.toLowerCase()
-      );
+      // Remove @ if present and add it back for consistency
+      const normalizedXHandle = XHandle.replace(/^@/, "");
+      const formattedXHandle = `@${normalizedXHandle}`;
+
+      // Check if this X handle already exists in messages
+      const alreadyApplied = messages.some((msg) => {
+        const [, handle] = msg.message.split(", ");
+        return handle.toLowerCase() === formattedXHandle.toLowerCase();
+      });
 
       if (alreadyApplied) {
         showError("You have already applied to this campaign");
@@ -120,7 +136,7 @@ export function CampaignDetails() {
 
       // Submit topic message
       const submitResult = await submitTopicMessage(
-        `${accountId}, ${twitterHandle}`,
+        `${accountId}, ${formattedXHandle}`,
         topicId
       );
 
@@ -133,7 +149,7 @@ export function CampaignDetails() {
       showSuccess(
         "Successfully applied to the campaign if you provided CORRECT X handle!"
       );
-      setTwitterHandle("");
+      setXHandle("");
 
       // Refresh messages list after MESSAGE_REFRESH_DELAY_MS seconds to give backend time to process the message
       setTimeout(() => {
@@ -235,7 +251,11 @@ export function CampaignDetails() {
                 Apply for this Campaign
               </h2>
 
-              {!isPaired ? (
+              {!showXHandleInput ? (
+                <div className="flex justify-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-primary-600"></div>
+                </div>
+              ) : !isPaired ? (
                 <div className="mb-6 p-4 bg-warning-50 border border-warning-200 rounded-md text-warning-700">
                   Please connect your wallet first to apply for this campaign.
                 </div>
@@ -243,22 +263,29 @@ export function CampaignDetails() {
                 <form onSubmit={handleApply} className="space-y-4">
                   <div>
                     <label
-                      htmlFor="twitterHandle"
+                      htmlFor="XHandle"
                       className="block text-sm font-medium text-secondary-700 mb-1"
                     >
-                      Your Twitter Handle
+                      Your X Handle
                     </label>
-                    <input
-                      type="text"
-                      id="twitterHandle"
-                      value={twitterHandle}
-                      onChange={(e) => setTwitterHandle(e.target.value)}
-                      required
-                      className="w-full px-4 py-2 border border-secondary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      placeholder="@yourtwitterhandle"
-                    />
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span className="text-secondary-500">@</span>
+                      </div>
+                      <input
+                        type="text"
+                        id="XHandle"
+                        value={XHandle}
+                        onChange={(e) =>
+                          setXHandle(e.target.value.replace(/^@/, ""))
+                        }
+                        required
+                        className="w-full pl-8 pr-4 py-2 border border-secondary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        placeholder="yourxhandle"
+                      />
+                    </div>
                     <p className="mt-1 text-sm text-secondary-500">
-                      This will be publicly visible on the Hedera network
+                      Note: This will be publicly visible on the Hedera network
                     </p>
                   </div>
 
