@@ -3,9 +3,12 @@ import { useParams, Link } from "react-router-dom";
 import { useWallet } from "../hooks/useWallet";
 import { HashConnectConnectionState } from "hashconnect";
 import { API_ENDPOINTS } from "../lib/environment";
-import { TOPIC_MESSAGES_PER_PAGE } from "../lib/constants";
+import {
+  TOPIC_MESSAGES_PER_PAGE,
+  MESSAGE_REFRESH_DELAY_MS,
+} from "../lib/constants";
 import { showError, showSuccess } from "../lib/toast";
-import { signMessage, submitTopicMessage } from "../lib/wallet";
+import { submitTopicMessage } from "../lib/wallet";
 
 interface Campaign {
   _id: string;
@@ -132,10 +135,10 @@ export function CampaignDetails() {
       );
       setTwitterHandle("");
 
-      // Refresh messages list after 5 seconds to give backend time to process the message
+      // Refresh messages list after MESSAGE_REFRESH_DELAY_MS seconds to give backend time to process the message
       setTimeout(() => {
         setRefreshTrigger((prev) => prev + 1);
-      }, 5000);
+      }, MESSAGE_REFRESH_DELAY_MS);
     } catch (error) {
       console.error("Error applying to campaign:", error);
       showError(
