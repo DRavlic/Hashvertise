@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { API_ENDPOINTS } from "../lib/environment";
-import { showError } from "../lib/toast";
+import { showError, getErrorMessage } from "../lib/toast";
 import { CAMPAIGNS_PER_PAGE } from "../lib/constants";
 import { formatUtcDate } from "../lib/date";
 
@@ -40,12 +40,8 @@ export function Campaigns() {
       setCampaigns(data.campaigns);
       setTotalPages(Math.ceil(data.total / CAMPAIGNS_PER_PAGE));
     } catch (error) {
-      console.error("Error fetching campaigns:", error);
-      showError(
-        `Error fetching campaigns: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
+      console.error("Error fetching campaigns:", getErrorMessage(error));
+      showError(`Error fetching campaigns: ${getErrorMessage(error)}`);
     } finally {
       setIsLoading(false);
     }

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWallet } from "../hooks/useWallet";
 import { createTopic, signMessage } from "../lib/wallet";
-import { showError, showSuccess } from "../lib/toast";
+import { showError, showSuccess, getErrorMessage } from "../lib/toast";
 import { HashConnectConnectionState } from "hashconnect";
 import { API_ENDPOINTS } from "../lib/environment";
 import {
@@ -304,12 +304,8 @@ export function CreateCampaign() {
       navigate("/");
       showSuccess("Campaign created successfully");
     } catch (error) {
-      console.error("Error creating campaign:" + error);
-      showError(
-        `Error creating campaign: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
+      console.error("Error creating campaign:", getErrorMessage(error));
+      showError(`Error creating campaign: ${getErrorMessage(error)}`);
     } finally {
       setIsSubmitting(false);
     }

@@ -1,4 +1,5 @@
-import { API_URL } from "./constants";
+import { API_URL } from "./environment";
+import { getErrorMessage } from "./toast";
 
 /**
  * Register a topic listener with the backend
@@ -30,10 +31,10 @@ export async function registerTopicListener(
       message: data.message,
     };
   } catch (error) {
-    console.error("Error registering topic listener:", error);
+    console.error("Error registering topic listener:", getErrorMessage(error));
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error occurred",
+      error: getErrorMessage(error),
     };
   }
 }
@@ -71,7 +72,10 @@ export async function submitConsensusMessage(
     const data = await response.json();
     return data.topicId;
   } catch (error) {
-    console.error("Error submitting consensus message:", error);
+    console.error(
+      "Error submitting consensus message:",
+      getErrorMessage(error)
+    );
     return undefined;
   }
 }

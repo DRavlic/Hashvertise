@@ -8,7 +8,7 @@ import {
   MESSAGE_REFRESH_DELAY_MS,
   X_HANDLE_INPUT_DELAY_MS,
 } from "../lib/constants";
-import { showError, showSuccess } from "../lib/toast";
+import { showError, showSuccess, getErrorMessage } from "../lib/toast";
 import { submitTopicMessage } from "../lib/wallet";
 import { formatUtcDate, formatUtcDateTime } from "../lib/date";
 
@@ -84,12 +84,8 @@ export function CampaignDetails() {
 
         setMessages(messagesData.messages || []);
       } catch (error) {
-        console.error("Error fetching campaign data:", error);
-        showError(
-          `Error fetching campaign data: ${
-            error instanceof Error ? error.message : "Unknown error"
-          }`
-        );
+        console.error("Error fetching campaign data:", getErrorMessage(error));
+        showError(`Error fetching campaign data: ${getErrorMessage(error)}`);
       } finally {
         setIsLoading(false);
       }
@@ -157,12 +153,8 @@ export function CampaignDetails() {
         setRefreshTrigger((prev) => prev + 1);
       }, MESSAGE_REFRESH_DELAY_MS);
     } catch (error) {
-      console.error("Error applying to campaign:", error);
-      showError(
-        `Error applying to campaign: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
+      console.error("Error applying to campaign:", getErrorMessage(error));
+      showError(`Error applying to campaign: ${getErrorMessage(error)}`);
     } finally {
       setIsSubmitting(false);
     }

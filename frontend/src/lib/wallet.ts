@@ -71,7 +71,7 @@ export async function initializeHashConnect() {
     showError(
       `Failed to initialize wallet connection: ${getErrorMessage(error)}`
     );
-    console.error("HashConnect initialization error: " + error);
+    console.error("HashConnect initialization error:", getErrorMessage(error));
     return null;
   }
 }
@@ -93,7 +93,7 @@ export async function connectWallet() {
     await hashconnect.openPairingModal();
   } catch (error) {
     showError(`Failed to connect wallet: ${getErrorMessage(error)}`);
-    console.error("Connect wallet error: " + error);
+    console.error("Connect wallet error:", getErrorMessage(error));
   }
 }
 
@@ -106,7 +106,7 @@ export async function disconnectWallet() {
     await hashconnect.disconnect();
   } catch (error) {
     showError(`Failed to disconnect wallet: ${getErrorMessage(error)}`);
-    console.error("Disconnect wallet error: " + error);
+    console.error("Disconnect wallet error:", getErrorMessage(error));
   }
 }
 
@@ -150,7 +150,7 @@ export async function signMessage(message: string) {
     return Buffer.from(signatureResult[0].signature).toString("base64");
   } catch (error) {
     showError(`Error signing message: ${getErrorMessage(error)}`);
-    console.error("Error signing message: " + error);
+    console.error("Error signing message:", getErrorMessage(error));
     return null;
   }
 }
@@ -182,7 +182,7 @@ export async function createTopic() {
     };
   } catch (error) {
     showError(`Error creating topic: ${getErrorMessage(error)}`);
-    console.error("Error creating topic: " + error);
+    console.error("Error creating topic:", getErrorMessage(error));
     return null;
   }
 }
@@ -213,7 +213,7 @@ export async function submitTopicMessage(message: string, topicId: string) {
     return true;
   } catch (error) {
     showError(`Error submitting topic message: ${getErrorMessage(error)}`);
-    console.error("Error submitting topic message: " + error);
+    console.error("Error submitting topic message:", getErrorMessage(error));
     return false;
   }
 }
