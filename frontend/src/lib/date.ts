@@ -1,4 +1,4 @@
-import { format, formatDistance, parseISO, formatISO } from "date-fns";
+import { format, parseISO, formatISO } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 
 /**
@@ -32,7 +32,6 @@ export function utcToLocal(dateString: string): Date {
  * @returns ISO string in UTC
  */
 export function localToUtc(date: Date): string {
-  // Create a new UTC date by converting the local date's timestamp to UTC
   return formatISO(new Date(date.toISOString()));
 }
 
@@ -77,31 +76,122 @@ export function formatUtcDateTime(
 }
 
 /**
- * Returns a relative time string (e.g., "5 minutes ago")
+ * Checks if two dates fall on the same calendar day
  *
- * USE CASES:
- * - For social media-style timestamps
- * - When showing recent activity
- * - When exact time is less important than recency
- *
- * @param dateString - ISO date string or timestamp in UTC
- * @returns Human-readable relative time string
+ * @param date1 - First date to compare
+ * @param date2 - Second date to compare
+ * @returns Boolean indicating if both dates are on the same day
  */
-export function formatRelativeTime(dateString: string): string {
-  const localDate = utcToLocal(dateString);
-  return formatDistance(localDate, new Date(), { addSuffix: true });
+export function isSameDay(date1: Date, date2: Date): boolean {
+  return (
+    date1.getFullYear() === date2.getFullYear() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getDate() === date2.getDate()
+  );
 }
 
 /**
- * Returns the local timezone identifier (e.g., "America/New_York")
+ * Checks if the first date is after or equal to the second date
+ *
+ * @param date1 - First date to compare
+ * @param date2 - Second date to compare
+ * @returns Boolean indicating if date1 is after or equal to date2
+ */
+export function isAfterOrEqual(date1: Date, date2: Date): boolean {
+  return date1.getTime() >= date2.getTime();
+}
+
+/**
+ * Formats a date for HTML date input (YYYY-MM-DD)
  *
  * USE CASES:
- * - For debugging timezone issues
- * - To display the user's current timezone in settings
- * - When timezone information needs to be sent to the server
+ * - When populating HTML date input fields
+ * - When preparing dates for form submissions
  *
- * @returns Local timezone string
+ * @param date - Date object to format (or null)
+ * @returns Formatted date string in YYYY-MM-DD format or empty string if null
  */
-export function getLocalTimezone(): string {
-  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+export function formatDateForDateInput(date: Date | null): string {
+  if (!date) return "";
+  return format(date, "yyyy-MM-dd");
+}
+
+/**
+ * Formats a date for HTML time input (HH:mm)
+ *
+ * USE CASES:
+ * - When populating HTML time input fields
+ * - When preparing times for form submissions
+ *
+ * @param date - Date object to format (or null)
+ * @returns Formatted time string in HH:mm format or empty string if null
+ */
+export function formatDateForTimeInput(date: Date | null): string {
+  if (!date) return "";
+  return format(date, "HH:mm");
+}
+
+/**
+ * Gets the current date formatted for HTML date input
+ *
+ * USE CASES:
+ * - When setting minimum date values in date inputs
+ * - For initializing date fields with the current date
+ * - When enforcing that dates cannot be in the past
+ *
+ * @returns Current date formatted as YYYY-MM-DD
+ */
+export function getMinStartDate(): string {
+  return format(new Date(), "yyyy-MM-dd");
+}
+
+/**
+ * Gets the minimum allowed date for an end date input
+ *
+ * USE CASES:
+ * - To ensure end date is not before start date
+ * - When implementing validation rules for date ranges
+ * - For form interfaces with dependent date fields
+ *
+ * @param startDate - The start date that determines the minimum (or null)
+ * @returns The minimum date formatted as YYYY-MM-DD
+ */
+export function getMinEndDate(startDate: Date | null): string {
+  if (startDate) {
+    return format(startDate, "yyyy-MM-dd");
+  }
+  return getMinStartDate();
+}
+
+/**
+ * Gets the minimum allowed time for an end time input when dates are the same day
+ *
+ * USE CASES:
+ * - When implementing time range constraints on same-day events
+ * - For ensuring end time is after start time plus a minimum gap
+ * - In scheduling interfaces where time gaps are required
+ *
+ * @param startDate - The start date and time (or null)
+ * @param endDate - The end date and time (or null)
+ * @param minGapMinutes - Minimum gap required between start and end times in minutes (default: 1)
+ * @returns Minimum time formatted as HH:mm or null if dates are not on the same day
+ */
+export function getMinEndTime(
+  startDate: Date | null,
+  endDate: Date | null,
+  minGapMinutes: number = 1
+): string | null {
+  if (startDate && endDate && isSameDay(startDate, endDate)) {
+    // If on the same day, end time must be after start time
+    const startHours = startDate.getHours();
+    const startMinutes = startDate.getMinutes() + minGapMinutes; // At least minGapMinutes later
+
+    const hours = startMinutes >= 60 ? (startHours + 1) % 24 : startHours;
+    const minutes = startMinutes >= 60 ? startMinutes - 60 : startMinutes;
+
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}`;
+  }
+  return null;
 }

@@ -23,12 +23,6 @@ The backend uses utility functions in `common.dates.ts` to ensure consistent dat
 
 - `createUtcDate()`: Creates a Date object guaranteed to be in UTC (can convert existing dates or create current UTC time)
   - _Use for: timestamps in new records, standardizing external dates, getting current UTC time_
-- `parseUtcDate()`: Parses a date string to a UTC date object
-  - _Use for: parsing API input, reading dates from external sources_
-- `formatUtcIsoString()`: Formats a date as an ISO string in UTC
-  - _Use for: API responses, logging, serialization_
-- `isValidIsoDate()`: Validates if a string is a valid ISO date
-  - _Use for: input validation, preventing parsing errors_
 
 MongoDB automatically sets `createdAt` and `updatedAt` timestamps in UTC through the `timestamps: true` option in our models.
 
@@ -44,10 +38,25 @@ The frontend uses utility functions in `lib/date.ts` to handle dates:
   - _Use for: displaying just the date part, listing creation dates_
 - `formatUtcDateTime()`: Formats UTC date strings as localized date and time strings
   - _Use for: full timestamps, transaction history_
-- `formatRelativeTime()`: Formats UTC date strings as relative time (e.g., "5 minutes ago")
-  - _Use for: social-style timestamps, recent activity_
-- `getLocalTimezone()`: Returns the local timezone identifier
-  - _Use for: debugging, displaying settings, sending timezone info_
+
+#### Form Date Handling
+
+For forms that involve date/time input, we use these additional utilities:
+
+- `isSameDay()`: Checks if two dates fall on the same calendar day
+  - _Use for: validating date ranges, applying same-day constraints_
+- `isAfterOrEqual()`: Checks if one date is after or equal to another
+  - _Use for: validating date sequences, preventing invalid date combinations_
+- `formatDateForDateInput()`: Formats dates for HTML date inputs (YYYY-MM-DD)
+  - _Use for: populating date input fields_
+- `formatDateForTimeInput()`: Formats dates for HTML time inputs (HH:mm)
+  - _Use for: populating time input fields_
+- `getMinStartDate()`: Gets current date formatted for date inputs
+  - _Use for: setting minimum allowed date in date inputs_
+- `getMinEndDate()`: Gets minimum allowed date for end date inputs
+  - _Use for: ensuring end date is not before start date_
+- `getMinEndTime()`: Gets minimum allowed time for end time inputs
+  - _Use for: ensuring end time is not before start time plus required gap_
 
 ### Hedera Consensus Timestamps
 
@@ -80,10 +89,17 @@ await TopicMessageModel.create({
 ### Frontend Example
 
 ```typescript
-import { formatUtcDateTime } from "../lib/date";
+import { formatUtcDateTime, getMinEndDate } from "../lib/date";
 
 // Display a UTC timestamp in local timezone
 <div className="timestamp">
   {formatUtcDateTime(message.consensusTimestamp)}
 </div>;
+
+// Set minimum end date in a date range picker
+<input
+  type="date"
+  value={formatDateForDateInput(endDate)}
+  min={getMinEndDate(startDate)}
+/>;
 ```
