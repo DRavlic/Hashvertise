@@ -38,8 +38,8 @@ export class TopicMessage {
   @prop({ required: true, unique: true })
   public message!: string;
 
-  @prop()
-  public consensusTimestamp?: Date;
+  @prop({ required: true })
+  public consensusTimestamp!: Date;
 }
 
 @modelOptions({
@@ -69,6 +69,12 @@ export class Campaign {
 
   @prop({ required: true, unique: true })
   public txId!: string;
+
+  @prop({ required: true, index: true })
+  public startDate!: Date;
+
+  @prop({ required: true, index: true })
+  public endDate!: Date;
 }
 
 // Create and export the models

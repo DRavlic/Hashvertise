@@ -26,6 +26,8 @@ export interface ParsedCampaignData {
   accountId: string;
   prizePool: number;
   requirement: string;
+  startDate: string;
+  endDate: string;
 }
 
 /**

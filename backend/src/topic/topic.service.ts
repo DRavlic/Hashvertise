@@ -335,8 +335,16 @@ export const parseCampaignMessage = (
 ): ParsedCampaignData | null => {
   try {
     // Parse the comma-separated values directly from the message
-    const [txId, topicId, name, accountId, prizePoolStr, requirement] =
-      message.split(", ");
+    const [
+      txId,
+      topicId,
+      name,
+      accountId,
+      prizePoolStr,
+      requirement,
+      startDate,
+      endDate,
+    ] = message.split(", ");
 
     // Convert prize pool to number
     const prizePool = parseInt(prizePoolStr);
@@ -348,7 +356,9 @@ export const parseCampaignMessage = (
       !name ||
       !accountId ||
       isNaN(prizePool) ||
-      !requirement
+      !requirement ||
+      !startDate ||
+      !endDate
     ) {
       return null;
     }
@@ -360,6 +370,8 @@ export const parseCampaignMessage = (
       accountId,
       prizePool,
       requirement,
+      startDate,
+      endDate,
     };
   } catch (error) {
     logger.error(`Error parsing campaign message: ${error}`);
@@ -438,6 +450,8 @@ export const createCampaign = async (
       prizePool: campaignData.prizePool,
       requirement: campaignData.requirement,
       txId: campaignData.txId,
+      startDate: new Date(campaignData.startDate),
+      endDate: new Date(campaignData.endDate),
     });
 
     return {
