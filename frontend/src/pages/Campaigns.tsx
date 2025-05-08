@@ -4,16 +4,7 @@ import { API_ENDPOINTS } from "../lib/environment";
 import { showError, getErrorMessage } from "../lib/toast";
 import { CAMPAIGNS_PER_PAGE } from "../lib/constants";
 import { formatUtcDate } from "../lib/date";
-
-interface Campaign {
-  _id: string;
-  topicId: string;
-  name: string;
-  accountId: string;
-  prizePool: number;
-  requirement: string;
-  createdAt: string;
-}
+import { Campaign } from "../lib/interfaces";
 
 export function Campaigns() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);

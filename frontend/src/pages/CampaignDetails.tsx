@@ -11,24 +11,7 @@ import {
 import { showError, showSuccess, getErrorMessage } from "../lib/toast";
 import { submitTopicMessage } from "../lib/wallet";
 import { formatUtcDate, formatUtcDateTime } from "../lib/date";
-
-interface Campaign {
-  _id: string;
-  topicId: string;
-  name: string;
-  accountId: string;
-  prizePool: number;
-  requirement: string;
-  createdAt: string;
-}
-
-interface TopicMessage {
-  _id: string;
-  topicId: string;
-  message: string;
-  consensusTimestamp: string;
-  createdAt: string;
-}
+import { Campaign, TopicMessage } from "../lib/interfaces";
 
 export function CampaignDetails() {
   const { topicId } = useParams<{ topicId: string }>();

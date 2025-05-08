@@ -38,7 +38,7 @@ export class TopicMessage {
   @prop({ required: true, unique: true })
   public message!: string;
 
-  @prop({ required: true })
+  @prop({ required: true, index: true })
   public consensusTimestamp!: Date;
 }
 

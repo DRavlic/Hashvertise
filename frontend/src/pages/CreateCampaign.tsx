@@ -19,14 +19,7 @@ import {
   START_TO_END_TIME_DIFF_MINUTES,
   DEFAULT_START_TO_END_TIME_DIFF_HOURS,
 } from "../lib/constants";
-
-interface CampaignFormData {
-  name: string;
-  prizePool: number;
-  requirement: string;
-  startDate: Date | null;
-  endDate: Date | null;
-}
+import { CampaignFormData } from "../lib/interfaces";
 
 export function CreateCampaign() {
   const navigate = useNavigate();
