@@ -3,6 +3,8 @@ import {
   DEFAULT_TOPIC_MESSAGES_LIMIT,
   DEFAULT_PAGE,
   DEFAULT_CAMPAIGNS_LIMIT,
+  MAX_CAMPAIGN_NAME_LENGTH,
+  MAX_REQUIREMENT_LENGTH,
 } from "./topic.constants";
 
 // Schema for setting up a topic listener
@@ -54,9 +56,29 @@ export const topicDeactivateSchema = z.object({
 // Schema for campaign verification
 export const campaignVerifySchema = z.object({
   body: z.object({
-    message: z.string({
-      required_error: "Message is required",
-    }),
+    message: z
+      .string({
+        required_error: "Message is required",
+      })
+      .refine(
+        (message) => {
+          // Extract campaign name and requirement from the message
+          // Message format: "txId, topicId, name, accountId, prizePool, requirement, startDate, endDate"
+          const parts = message.split(", ");
+          if (parts.length < 8) return false;
+
+          const name = parts[2];
+          const requirement = parts[5];
+
+          return (
+            name.length <= MAX_CAMPAIGN_NAME_LENGTH &&
+            requirement.length <= MAX_REQUIREMENT_LENGTH
+          );
+        },
+        {
+          message: `Campaign name must not exceed ${MAX_CAMPAIGN_NAME_LENGTH} characters and requirement must not exceed ${MAX_REQUIREMENT_LENGTH} characters.`,
+        }
+      ),
     signature: z.string({
       required_error: "Signature is required",
     }),

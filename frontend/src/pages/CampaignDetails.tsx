@@ -7,11 +7,15 @@ import {
   TOPIC_MESSAGES_PER_PAGE,
   MESSAGE_REFRESH_DELAY_MS,
   X_HANDLE_INPUT_DELAY_MS,
+  COUNTDOWN_REFRESH_INTERVAL_MS,
 } from "../lib/constants";
 import { showError, showSuccess, getErrorMessage } from "../lib/toast";
-import { submitTopicMessage } from "../lib/wallet";
-import { formatUtcDate, formatUtcDateTime } from "../lib/date";
-import { Campaign, TopicMessage } from "../lib/interfaces";
+import { submitTopicMessage, getLedgerId } from "../lib/wallet";
+import { formatUtcDateTime, getCampaignStatusInfo } from "../lib/date";
+import { Campaign, TopicMessage, CampaignStatus } from "../lib/interfaces";
+import { StatusBadge } from "../components/StatusBadge";
+import { DateInfoBox } from "../components/DateInfoBox";
+import { getHashscanTopicUrl } from "../lib/url";
 
 export function CampaignDetails() {
   const { topicId } = useParams<{ topicId: string }>();
@@ -23,8 +27,30 @@ export function CampaignDetails() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [showXHandleInput, setShowXHandleInput] = useState(false);
+  const [campaignStatusInfo, setCampaignStatusInfo] = useState<ReturnType<
+    typeof getCampaignStatusInfo
+  > | null>(null);
 
   const isPaired = connectionStatus === HashConnectConnectionState.Paired;
+
+  // Update campaign status periodically
+  useEffect(() => {
+    if (!campaign?.startDate || !campaign?.endDate) return;
+
+    const updateStatus = () => {
+      setCampaignStatusInfo(
+        getCampaignStatusInfo(campaign.startDate, campaign.endDate)
+      );
+    };
+
+    // Initial update
+    updateStatus();
+
+    // Update every minute to keep timers accurate
+    const interval = setInterval(updateStatus, COUNTDOWN_REFRESH_INTERVAL_MS);
+
+    return () => clearInterval(interval);
+  }, [campaign?.startDate, campaign?.endDate]);
 
   useEffect(() => {
     // Delay showing the form to prevent flashing
@@ -67,8 +93,10 @@ export function CampaignDetails() {
 
         setMessages(messagesData.messages || []);
       } catch (error) {
-        console.error("Error fetching campaign data:", getErrorMessage(error));
-        showError(`Error fetching campaign data: ${getErrorMessage(error)}`);
+        console.info(
+          "Campaign data could not be fetched:",
+          getErrorMessage(error)
+        );
       } finally {
         setIsLoading(false);
       }
@@ -95,6 +123,12 @@ export function CampaignDetails() {
       return;
     }
 
+    // Check if campaign is active
+    if (campaignStatusInfo?.status !== CampaignStatus.ACTIVE) {
+      showError("You can only apply to active campaigns");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -102,10 +136,10 @@ export function CampaignDetails() {
       const normalizedXHandle = XHandle.replace(/^@/, "");
       const formattedXHandle = `@${normalizedXHandle}`;
 
-      // Check if this X handle already exists in messages
+      // Check if this X handle already exists in messages we got from the backend
       const alreadyApplied = messages.some((msg) => {
         const [, handle] = msg.message.split(", ");
-        return handle.toLowerCase() === formattedXHandle.toLowerCase();
+        return handle?.toLowerCase() === formattedXHandle.toLowerCase();
       });
 
       if (alreadyApplied) {
@@ -143,6 +177,9 @@ export function CampaignDetails() {
     }
   };
 
+  // Check if user should be able to apply (only for active campaigns)
+  const canApply = campaignStatusInfo?.status === CampaignStatus.ACTIVE;
+
   if (isLoading) {
     return (
       <div className="flex justify-center py-12">
@@ -162,7 +199,7 @@ export function CampaignDetails() {
             The campaign you're looking for doesn't exist or has been removed.
           </p>
           <Link
-            to="/"
+            to="/campaigns"
             className="px-6 py-3 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 transition-colors inline-block"
           >
             Return to Campaigns
@@ -175,7 +212,7 @@ export function CampaignDetails() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       <Link
-        to="/"
+        to="/campaigns"
         className="inline-flex items-center text-primary-600 mb-6 hover:text-primary-700"
       >
         <svg
@@ -194,31 +231,60 @@ export function CampaignDetails() {
       </Link>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Campaign Details */}
         <div className="md:col-span-2">
           <div className="bg-white p-6 rounded-lg shadow-sm border border-secondary-200">
-            <h1 className="text-2xl font-bold text-primary-600 mb-4">
-              {campaign.name}
-            </h1>
+            <div className="flex flex-wrap items-center mb-6">
+              <h1 className="text-2xl font-bold text-primary-600 mr-3 break-words">
+                {campaign.name}
+              </h1>
 
-            <div className="flex items-center text-sm text-secondary-500 mb-4">
-              <span className="mr-4">
-                Created: {formatUtcDate(campaign.createdAt)}
-              </span>
-              <span>Topic ID: {campaign.topicId}</span>
+              {campaignStatusInfo && (
+                <StatusBadge
+                  status={campaignStatusInfo.status}
+                  className="mt-1.5 sm:mt-0"
+                />
+              )}
             </div>
 
-            <div className="text-lg font-medium text-success-600 mb-4">
+            <div className="flex items-center group relative mb-4 text-sm text-secondary-500">
+              <span className="text-secondary-400 mr-1">🔗</span>
+              <span>Topic ID: </span>
+              <a
+                href={getHashscanTopicUrl(campaign.topicId, getLedgerId())}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ml-1 text-primary-600 hover:text-primary-700 hover:underline flex items-center"
+                title="View on Hashscan"
+              >
+                <span>{campaign.topicId}</span>
+              </a>
+            </div>
+
+            {campaignStatusInfo && (
+              <DateInfoBox
+                startDate={campaign.startDate}
+                endDate={campaign.endDate}
+                status={campaignStatusInfo.status}
+                className="mb-6"
+              />
+            )}
+
+            <div className="text-lg font-medium text-success-600 mb-4 flex items-center">
+              <span className="text-success-600 mr-2">💰</span>
               Prize Pool: ${campaign.prizePool.toFixed(2)}
             </div>
 
             <div className="mb-6">
-              <h2 className="text-lg font-semibold text-secondary-800 mb-2">
+              <h2 className="text-lg font-semibold text-secondary-800 mb-2 flex items-center">
+                <span className="text-secondary-600 mr-2">📋</span>
                 Requirement
               </h2>
-              <p className="text-secondary-600 whitespace-pre-line">
+              <div
+                className="p-4 bg-secondary-50 rounded-md text-secondary-600 border border-secondary-200"
+                style={{ whiteSpace: "pre-wrap", overflowWrap: "break-word" }}
+              >
                 {campaign.requirement}
-              </p>
+              </div>
             </div>
 
             {/* Apply Form */}
@@ -234,6 +300,12 @@ export function CampaignDetails() {
               ) : !isPaired ? (
                 <div className="mb-6 p-4 bg-warning-50 border border-warning-200 rounded-md text-warning-700">
                   Please connect your wallet first to apply for this campaign.
+                </div>
+              ) : !canApply ? (
+                <div className="mb-6 p-4 bg-warning-50 border border-warning-200 rounded-md text-warning-700">
+                  {campaignStatusInfo?.status === CampaignStatus.UPCOMING
+                    ? "This campaign is upcoming. Please wait until the start date to apply."
+                    : "This campaign has ended and is no longer accepting applications."}
                 </div>
               ) : (
                 <form onSubmit={handleApply} className="space-y-4">

@@ -18,6 +18,8 @@ import { isBefore, addHours, addMinutes } from "date-fns";
 import {
   START_TO_END_TIME_DIFF_MINUTES,
   DEFAULT_START_TO_END_TIME_DIFF_HOURS,
+  MAX_CAMPAIGN_NAME_LENGTH,
+  MAX_REQUIREMENT_LENGTH,
 } from "../lib/constants";
 import { CampaignFormData } from "../lib/interfaces";
 
@@ -331,9 +333,13 @@ export function CreateCampaign() {
             value={formData.name}
             onChange={handleChange}
             required
+            maxLength={MAX_CAMPAIGN_NAME_LENGTH}
             className="w-full px-4 py-2 border border-secondary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             placeholder="Enter campaign name"
           />
+          <p className="mt-1 text-xs text-secondary-500 flex justify-end">
+            {formData.name.length}/{MAX_CAMPAIGN_NAME_LENGTH}
+          </p>
         </div>
 
         <div>
@@ -544,10 +550,15 @@ export function CreateCampaign() {
             value={formData.requirement}
             onChange={handleChange}
             required
+            maxLength={MAX_REQUIREMENT_LENGTH}
             rows={4}
             className="w-full px-4 py-2 border border-secondary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             placeholder="Enter text that promoters need to include in their post"
+            style={{ whiteSpace: "pre-wrap", overflowWrap: "break-word" }}
           />
+          <p className="mt-1 text-xs text-secondary-500 flex justify-end">
+            {formData.requirement.length}/{MAX_REQUIREMENT_LENGTH}
+          </p>
         </div>
 
         <button

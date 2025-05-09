@@ -13,5 +13,16 @@ export const TOPIC_MESSAGES_PER_PAGE = 10;
 export const MESSAGE_REFRESH_DELAY_MS = 5000; // 5 seconds
 export const X_HANDLE_INPUT_DELAY_MS = 700; // 0.7 seconds
 export const TOAST_DURATION_MS = 3000; // 3 seconds
+export const COUNTDOWN_REFRESH_INTERVAL_MS = 60000; // 1 minute
 export const DEFAULT_START_TO_END_TIME_DIFF_HOURS = 12; // only set at the rendering of the CreateCampaign page
 export const START_TO_END_TIME_DIFF_MINUTES = 1;
+
+// Input length constraints
+export const MAX_CAMPAIGN_NAME_LENGTH = 40;
+export const MAX_REQUIREMENT_LENGTH = 2000;
+
+// Hashscan URLs
+export const HASHSCAN_URLS = {
+  MAINNET: "https://hashscan.io/mainnet",
+  TESTNET: "https://hashscan.io/testnet",
+};

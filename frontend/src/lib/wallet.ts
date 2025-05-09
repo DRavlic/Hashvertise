@@ -218,6 +218,15 @@ export async function submitTopicMessage(message: string, topicId: string) {
   }
 }
 
+export function getLedgerId() {
+  if (!hashconnect) {
+    console.error("HashConnect not initialized");
+    return null;
+  }
+
+  return hashconnect.ledgerId;
+}
+
 export function subscribeToConnectionStatus(
   listener: (status: HashConnectConnectionState) => void
 ) {

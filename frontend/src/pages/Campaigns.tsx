@@ -3,8 +3,9 @@ import { Link } from "react-router-dom";
 import { API_ENDPOINTS } from "../lib/environment";
 import { showError, getErrorMessage } from "../lib/toast";
 import { CAMPAIGNS_PER_PAGE } from "../lib/constants";
-import { formatUtcDate } from "../lib/date";
+import { getCampaignStatus } from "../lib/date";
 import { Campaign } from "../lib/interfaces";
+import { StatusBadge } from "../components/StatusBadge";
 
 export function Campaigns() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -45,9 +46,7 @@ export function Campaigns() {
   return (
     <div className="max-w-5xl mx-auto">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold text-primary-600">
-          Active Campaigns
-        </h1>
+        <h1 className="text-2xl font-bold text-primary-600">Campaigns</h1>
         <Link
           to="/campaign/new"
           className="px-4 py-2 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 transition-colors"
@@ -83,20 +82,23 @@ export function Campaigns() {
                 key={campaign._id}
                 className="bg-white p-6 rounded-lg shadow-sm border border-secondary-200 hover:shadow-md transition-shadow"
               >
-                <h3 className="text-lg font-semibold text-secondary-800 mb-2 truncate">
-                  {campaign.name}
-                </h3>
-                <div className="text-sm text-secondary-500 mb-3">
-                  Created: {formatUtcDate(campaign.createdAt)}
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="text-lg font-semibold text-secondary-800 line-clamp-2 mr-2 break-words">
+                    {campaign.name}
+                  </h3>
+                  <StatusBadge
+                    status={getCampaignStatus(
+                      campaign.startDate,
+                      campaign.endDate
+                    )}
+                    className="flex-shrink-0"
+                  />
                 </div>
                 <div className="mb-4">
                   <div className="font-medium text-success-600">
                     Prize: ${campaign.prizePool.toFixed(2)}
                   </div>
                 </div>
-                <p className="text-secondary-600 mb-4 line-clamp-2">
-                  {campaign.requirement}
-                </p>
                 <Link
                   to={`/campaign/${campaign.topicId}`}
                   className="text-primary-600 font-medium hover:text-primary-700"

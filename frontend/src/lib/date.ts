@@ -1,5 +1,11 @@
-import { format, parseISO, formatISO } from "date-fns";
+import {
+  format,
+  parseISO,
+  formatISO,
+  differenceInMilliseconds,
+} from "date-fns";
 import { toZonedTime } from "date-fns-tz";
+import { CampaignStatus, CampaignStatusInfo } from "./interfaces";
 
 /**
  * Converts a UTC date string to a Date object in the local timezone
@@ -194,4 +200,100 @@ export function getMinEndTime(
       .padStart(2, "0")}`;
   }
   return null;
+}
+
+/**
+ * Determines the status of a campaign based on its start and end dates
+ *
+ * @param startDate - The campaign start date string in UTC
+ * @param endDate - The campaign end date string in UTC
+ * @returns CampaignStatus indicating whether the campaign is upcoming, active, or has ended
+ */
+export function getCampaignStatus(
+  startDate: string,
+  endDate: string
+): CampaignStatus {
+  const now = new Date();
+  const start = parseISO(startDate);
+  const end = parseISO(endDate);
+
+  if (now < start) {
+    return CampaignStatus.UPCOMING;
+  } else if (now >= start && now < end) {
+    return CampaignStatus.ACTIVE;
+  } else {
+    return CampaignStatus.ENDED;
+  }
+}
+
+/**
+ * Formats a duration into a readable countdown format (1d 04h 22m)
+ *
+ * @param targetDate - The target date to count down to
+ * @returns Formatted string showing days, hours, and minutes remaining
+ */
+export function formatCountdown(targetDate: Date): string {
+  const now = new Date();
+  const diff = differenceInMilliseconds(targetDate, now);
+
+  if (diff <= 0) {
+    return "0d 00h 00m";
+  }
+
+  // Calculate days, hours, minutes
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+  return `${days}d ${hours.toString().padStart(2, "0")}h ${minutes
+    .toString()
+    .padStart(2, "0")}m`;
+}
+
+/**
+ * Get full campaign status information including status indicator and time display
+ *
+ * @param startDate - Campaign start date in UTC
+ * @param endDate - Campaign end date in UTC
+ * @returns Object with status, label, color, and time display information
+ */
+export function getCampaignStatusInfo(
+  startDate: string,
+  endDate: string
+): CampaignStatusInfo {
+  const status = getCampaignStatus(startDate, endDate);
+
+  switch (status) {
+    case CampaignStatus.UPCOMING:
+      return {
+        status,
+        statusLabel: "Upcoming",
+        statusColor: "text-warning-700",
+        timeDisplay: `Starts in: ${formatCountdown(parseISO(startDate))}`,
+      };
+
+    case CampaignStatus.ACTIVE:
+      return {
+        status,
+        statusLabel: "Active",
+        statusColor: "text-success-600",
+        timeDisplay: `Ends in: ${formatCountdown(parseISO(endDate))}`,
+      };
+
+    case CampaignStatus.ENDED:
+      return {
+        status,
+        statusLabel: "Ended",
+        statusColor: "text-secondary-600",
+        timeDisplay: null,
+      };
+
+    default:
+      return {
+        status,
+        statusLabel: "Unknown",
+        statusColor: "text-secondary-600",
+        timeDisplay: null,
+      };
+  }
 }

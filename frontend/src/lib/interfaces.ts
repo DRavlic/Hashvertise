@@ -2,6 +2,19 @@
  * Campaign-related interfaces
  */
 
+export enum CampaignStatus {
+  UPCOMING = "UPCOMING",
+  ACTIVE = "ACTIVE",
+  ENDED = "ENDED",
+}
+
+export interface CampaignStatusInfo {
+  status: CampaignStatus;
+  statusLabel: string;
+  statusColor: string;
+  timeDisplay: string | null;
+}
+
 export interface Campaign {
   _id: string;
   topicId: string;
