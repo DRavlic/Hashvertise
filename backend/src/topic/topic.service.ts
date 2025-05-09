@@ -120,9 +120,36 @@ export const initializeTopicListeners = async (
       return;
     }
 
-    // Set up each listener
+    // Get only topic IDs of campaigns that haven't ended yet
+    const currentDate = new Date();
+    const activeCampaignResults = await CampaignModel.find(
+      { endDate: { $gte: currentDate } },
+      { topicId: 1, _id: 0 }
+    ).lean();
+
+    // Extract just the topic IDs into a set for efficient lookup
+    const activeCampaignTopicIds = new Set(
+      activeCampaignResults.map((result) => result.topicId)
+    );
+
+    // Set up each listener only if it belongs to a campaign that hasn't ended
     const setupPromises = activeListeners.map(async (listener) => {
       try {
+        // Skip listeners for campaigns that have ended or don't exist
+        if (!activeCampaignTopicIds.has(listener.topicId)) {
+          logger.info(
+            `Skipping listener for ended/invalid campaign: ${listener.topicId}`
+          );
+
+          // Mark as inactive since the campaign has ended
+          await TopicListenerModel.findOneAndUpdate(
+            { topicId: listener.topicId },
+            { isActive: false }
+          );
+
+          return;
+        }
+
         const subscription = await setupTopicListener(
           client,
           TopicId.fromString(listener.topicId),

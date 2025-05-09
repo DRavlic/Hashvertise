@@ -13,7 +13,13 @@ const main = async () => {
 
     // Initialize active topic listeners from database
     logger.info("Initializing topic listeners...");
-    await initializeTopicListeners(app.locals.hederaClient);
+    try {
+      await initializeTopicListeners(app.locals.hederaClient);
+      logger.info("Topic listeners initialization completed successfully");
+    } catch (listenerError) {
+      logger.error("Error initializing topic listeners:", listenerError);
+      // Continue execution even if topic listeners fail
+    }
   } catch (error) {
     logger.error("Error at starting the server:", error);
     process.exit(1);
