@@ -21,7 +21,7 @@ import {
   MAX_CAMPAIGN_NAME_LENGTH,
   MAX_REQUIREMENT_LENGTH,
 } from "../lib/constants";
-import { CampaignFormData } from "../lib/interfaces";
+import { CampaignFormData, CreationStep } from "../lib/interfaces";
 
 export function CreateCampaign() {
   const navigate = useNavigate();
@@ -43,6 +43,9 @@ export function CreateCampaign() {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentStep, setCurrentStep] = useState<CreationStep>(
+    CreationStep.IDLE
+  );
   const [useCurrentTimeAsStart, setUseCurrentTimeAsStart] = useState(false);
 
   const isPaired = connectionStatus === HashConnectConnectionState.Paired;
@@ -252,12 +255,14 @@ export function CreateCampaign() {
         return;
       }
 
-      // Create a new topic
+      // Step 1: Create a new topic
+      setCurrentStep(CreationStep.CREATING_TOPIC);
       const topicResponse = await createTopic();
 
       if (!topicResponse) {
         // If createTopic returns null, it already showed appropriate error messages
         setIsSubmitting(false);
+        setCurrentStep(CreationStep.IDLE);
         return;
       }
 
@@ -269,15 +274,19 @@ export function CreateCampaign() {
 
       const message = `${txId}, ${topicId}, ${formData.name}, ${accountId}, ${formData.prizePool}, ${formData.requirement}, ${startDateUTC}, ${endDateUTC}`;
 
+      // Step 2: Sign the message
+      setCurrentStep(CreationStep.SIGNING_DATA);
       const signature = await signMessage(message);
 
       if (!signature) {
         // If signMessage returns null, it already showed appropriate error messages
         setIsSubmitting(false);
+        setCurrentStep(CreationStep.IDLE);
         return;
       }
 
-      // Send the message and signature to the backend
+      // Step 3: Send to backend and create the campaign
+      setCurrentStep(CreationStep.CREATING_CAMPAIGN);
       const response = await fetch(API_ENDPOINTS.VERIFY_CAMPAIGN, {
         method: "POST",
         headers: {
@@ -295,14 +304,31 @@ export function CreateCampaign() {
         throw new Error(data.error || "Failed to verify campaign");
       }
 
-      // If successful, navigate to the home page and show a success message
-      navigate("/");
+      // If successful, navigate to the campaigns page and show a success message
+      navigate("/campaigns");
       showSuccess("Campaign created successfully");
     } catch (error) {
       console.error("Error creating campaign:", getErrorMessage(error));
       showError(`Error creating campaign: ${getErrorMessage(error)}`);
     } finally {
       setIsSubmitting(false);
+      setCurrentStep(CreationStep.IDLE);
+    }
+  };
+
+  // Function to get the appropriate button text based on the current step
+  const getButtonText = () => {
+    if (!isSubmitting) return "Create Campaign";
+
+    switch (currentStep) {
+      case CreationStep.CREATING_TOPIC:
+        return "Creating Topic...";
+      case CreationStep.SIGNING_DATA:
+        return "Signing Data...";
+      case CreationStep.CREATING_CAMPAIGN:
+        return "Creating Campaign...";
+      default:
+        return "Processing...";
     }
   };
 
@@ -571,7 +597,7 @@ export function CreateCampaign() {
           }
           className="w-full px-6 py-3 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 transition-colors disabled:bg-secondary-400 disabled:cursor-not-allowed"
         >
-          {isSubmitting ? "Creating Campaign..." : "Create Campaign"}
+          {getButtonText()}
         </button>
       </form>
     </div>

@@ -2,6 +2,13 @@
  * Campaign-related interfaces
  */
 
+export enum CreationStep {
+  IDLE = "IDLE",
+  CREATING_TOPIC = "CREATING_TOPIC",
+  SIGNING_DATA = "SIGNING_DATA",
+  CREATING_CAMPAIGN = "CREATING_CAMPAIGN",
+}
+
 export enum CampaignStatus {
   UPCOMING = "UPCOMING",
   ACTIVE = "ACTIVE",
