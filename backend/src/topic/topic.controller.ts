@@ -20,6 +20,10 @@ import {
   DEFAULT_CAMPAIGNS_LIMIT,
 } from "./topic.constants";
 import { UserModel } from "../common/common.model";
+import {
+  HEDERA_TESTNET_MIRROR_NODE_URL,
+  HEDERA_MIRROR_ACCOUNT_ENDPOINT,
+} from "../common/common.constants";
 
 /**
  * Set up a topic listener for a Hedera topic
@@ -177,12 +181,47 @@ export const verifyCampaignAndCreate = async (
     }
 
     // Find the user by accountId
-    const user = await UserModel.findOne({ accountId: campaignData.accountId });
+    let user = await UserModel.findOne({ accountId: campaignData.accountId });
+
+    // If user doesn't exist, try to get public key from Hedera mirror node
     if (!user) {
-      return res.status(StatusCodes.UNAUTHORIZED).json({
-        success: false,
-        error: "User not found",
-      });
+      try {
+        const accountUrl = `${HEDERA_TESTNET_MIRROR_NODE_URL}${HEDERA_MIRROR_ACCOUNT_ENDPOINT}${campaignData.accountId}`;
+        const response = await fetch(accountUrl);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const accountData = await response.json();
+
+        if (accountData && accountData.key) {
+          // Create a new user with the public key from the mirror node
+          user = await UserModel.create({
+            accountId: campaignData.accountId,
+            publicKey: accountData.key.key,
+          });
+
+          logger.info(
+            `Created new user from mirror node data: ${campaignData.accountId}`
+          );
+        } else {
+          return res.status(StatusCodes.NOT_FOUND).json({
+            success: false,
+            error:
+              "Could not retrieve valid public key from Hedera network - user not found",
+          });
+        }
+      } catch (error: any) {
+        logger.error(
+          `Error retrieving account data from mirror node: ${error.message}`
+        );
+        return res.status(StatusCodes.NOT_FOUND).json({
+          success: false,
+          error:
+            "Error retrieving account data from Hedera network - user not found",
+        });
+      }
     }
 
     // Verify the signature
