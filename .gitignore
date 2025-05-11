@@ -128,3 +128,10 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Smart contracts
+smart-contracts/artifacts
+smart-contracts/cache
+smart-contracts/deployments
+smart-contracts/typechain-types
+smart-contracts/coverage
