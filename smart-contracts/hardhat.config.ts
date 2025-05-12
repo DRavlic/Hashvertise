@@ -1,23 +1,11 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
-import * as dotenv from "dotenv";
-
-dotenv.config();
-
-// ECDSA accounts only
-const HEDERA_TESTNET_PRIVATE_KEY =
-  process.env.HEDERA_TESTNET_PRIVATE_KEY ||
-  "0000000000000000000000000000000000000000000000000000000000000000";
-const HEDERA_MAINNET_PRIVATE_KEY =
-  process.env.HEDERA_MAINNET_PRIVATE_KEY ||
-  "0000000000000000000000000000000000000000000000000000000000000000";
-
-const HEDERA_TESTNET_JSON_RPC_RELAY_URL =
-  process.env.HEDERA_TESTNET_JSON_RPC_RELAY_URL ||
-  "https://testnet.hashio.io/api";
-const HEDERA_MAINNET_JSON_RPC_RELAY_URL =
-  process.env.HEDERA_MAINNET_JSON_RPC_RELAY_URL ||
-  "https://mainnet.hashio.io/api";
+import {
+  HEDERA_TESTNET_JSON_RPC_RELAY_URL,
+  HEDERA_MAINNET_JSON_RPC_RELAY_URL,
+  HEDERA_TESTNET_PRIVATE_KEY,
+  HEDERA_MAINNET_PRIVATE_KEY,
+} from "./environment";
 
 const config: HardhatUserConfig = {
   solidity: "0.8.28",
@@ -33,6 +21,15 @@ const config: HardhatUserConfig = {
       accounts: [HEDERA_MAINNET_PRIVATE_KEY],
       chainId: 295,
     },
+  },
+  paths: {
+    sources: "./src/contracts",
+    tests: "./src/test",
+    cache: "./hardhat-files/cache",
+    artifacts: "./hardhat-files/artifacts",
+  },
+  typechain: {
+    outDir: "./hardhat-files/typechain-types",
   },
 };
 

@@ -1,0 +1,18 @@
+import * as dotenv from "dotenv";
+
+dotenv.config();
+
+// ECDSA accounts only
+export const HEDERA_TESTNET_PRIVATE_KEY =
+  process.env.HEDERA_TESTNET_PRIVATE_KEY ||
+  "0000000000000000000000000000000000000000000000000000000000000000";
+export const HEDERA_MAINNET_PRIVATE_KEY =
+  process.env.HEDERA_MAINNET_PRIVATE_KEY ||
+  "0000000000000000000000000000000000000000000000000000000000000000";
+
+export const HEDERA_TESTNET_JSON_RPC_RELAY_URL =
+  process.env.HEDERA_TESTNET_JSON_RPC_RELAY_URL ||
+  "https://testnet.hashio.io/api";
+export const HEDERA_MAINNET_JSON_RPC_RELAY_URL =
+  process.env.HEDERA_MAINNET_JSON_RPC_RELAY_URL ||
+  "https://mainnet.hashio.io/api";

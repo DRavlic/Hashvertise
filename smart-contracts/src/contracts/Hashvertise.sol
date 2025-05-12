@@ -11,7 +11,7 @@ contract Hashvertise {
         owner = msg.sender;
     }
 
-    function getOwner() public view returns (address) {
+    function getOwners() public view returns (address) {
         return owner;
     }
 }

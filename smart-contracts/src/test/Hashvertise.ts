@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { Hashvertise } from "../typechain-types";
+import { Hashvertise } from "../../hardhat-files/typechain-types";
 
 // Note: test will be run on testnet by default
 describe("Hashvertise", function () {

@@ -130,8 +130,4 @@ dist
 .pnp.*
 
 # Smart contracts
-smart-contracts/artifacts
-smart-contracts/cache
-smart-contracts/deployments
-smart-contracts/typechain-types
-smart-contracts/coverage
+smart-contracts/hardhat-files
