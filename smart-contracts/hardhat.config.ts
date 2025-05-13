@@ -1,24 +1,28 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import {
-  HEDERA_TESTNET_JSON_RPC_RELAY_URL,
-  HEDERA_MAINNET_JSON_RPC_RELAY_URL,
-  HEDERA_TESTNET_PRIVATE_KEY,
-  HEDERA_MAINNET_PRIVATE_KEY,
+  TESTNET_JSON_RPC_RELAY_URL,
+  MAINNET_JSON_RPC_RELAY_URL,
+  TESTNET_PRIVATE_KEY,
+  MAINNET_PRIVATE_KEY,
 } from "./environment";
+
+// Import tasks
+import "./src/tasks/deposit";
+import "./src/tasks/check-deposit";
 
 const config: HardhatUserConfig = {
   solidity: "0.8.28",
   defaultNetwork: "hederaTestnet",
   networks: {
     hederaTestnet: {
-      url: HEDERA_TESTNET_JSON_RPC_RELAY_URL,
-      accounts: [HEDERA_TESTNET_PRIVATE_KEY],
+      url: TESTNET_JSON_RPC_RELAY_URL,
+      accounts: [TESTNET_PRIVATE_KEY],
       chainId: 296,
     },
     hederaMainnet: {
-      url: HEDERA_MAINNET_JSON_RPC_RELAY_URL,
-      accounts: [HEDERA_MAINNET_PRIVATE_KEY],
+      url: MAINNET_JSON_RPC_RELAY_URL,
+      accounts: [MAINNET_PRIVATE_KEY],
       chainId: 295,
     },
   },
