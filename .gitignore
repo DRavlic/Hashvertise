@@ -131,3 +131,4 @@ dist
 
 # Smart contracts
 smart-contracts/hardhat-files
+smart-contracts/src/local-scripts
