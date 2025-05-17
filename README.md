@@ -1,22 +1,181 @@
 # Hashvertise
 
-Decentralized advertising platform built on the Hedera network.
+Decentralized advertising platform built on the Hedera network, allowing advertisers to create campaigns and reward participants for social media posts.
 
-## Project Structure
+## Overview
 
-The project is organized into the following parts:
+Hashvertise connects advertisers with social media users through a decentralized platform on Hedera. Advertisers create campaigns with required hashtags, deposit HBAR as rewards, and participants earn rewards by including these hashtags in their posts.
 
-- **frontend**: React web application for advertisers to create campaigns
-- **backend**: Express server that manages topic listeners and handles Hedera transactions
+### Key Features
 
-### Architecture Overview
+- Create advertising campaigns with specific requirements
+- Deposit HBAR rewards for campaign participants
+- Automatically verify social media posts with requirements
+- Securely distribute rewards to participants
+- Wallet-based authentication using HashConnect
+
+## Tech Stack
+
+### Backend
+
+- Node.js with Express
+- TypeScript
+- Hedera SDK for topic creation and listening
+- MongoDB for data storage
+- Pino for logging
+
+### Frontend
+
+- React 19
+- TypeScript
+- HashConnect (WalletConnect) for wallet integration
+- TailwindCSS for styling
+
+### Smart Contracts
+
+- Solidity (v0.8.28)
+- Hardhat development environment
+- Deployed on Hedera network
+
+## Architecture Overview
 
 The project follows a client-server architecture for interacting with the Hedera network:
 
-- **frontend** uses React and connects to Hedera wallets using the **hashconnect** library
-- **backend** handles all authenticated Hedera transactions through the Hedera SDK
+- **Frontend** uses React and connects to Hedera wallets using HashConnect
+- **Backend** handles topic listeners and authenticated Hedera transactions
+- **Smart Contracts** manage HBAR deposits and prize distribution
 
-> **Important**: Cryptographic operations that require authentication with private keys should always be performed on the backend. The frontend should only use hashconnect for wallet connections and signing.
+## Installation
+
+### Prerequisites
+
+- Node.js (v16+)
+- Docker and Docker Compose (for MongoDB)
+- Hedera testnet account
+
+### Setup
+
+1. Clone the repository
+
+   ```bash
+   git clone https://github.com/DRavlic/hashvertise.git
+   cd hashvertise
+   ```
+
+2. Install dependencies
+
+   ```bash
+   npm install
+   ```
+
+3. Set up environment variables:
+
+   Create a `.env` file in the backend directory:
+
+   ```
+   # Hedera network
+   HEDERA_NETWORK=testnet
+   HEDERA_OPERATOR_ID=your-hedera-account-id  # e.g., 0.0.123456
+   HEDERA_OPERATOR_KEY=your-private-key
+
+   # MongoDB
+   MONGODB_URI=mongodb://root:example@localhost:27017/hashvertise
+
+   # Server
+   PORT=3001
+   ```
+
+   Create a `.env` file in the frontend directory:
+
+   ```
+   # HashConnect integration
+   VITE_WALLET_CONNECT_PROJECT_ID=your-walletconnect-project-id
+
+   # API endpoint
+   VITE_API_URL=http://localhost:3001/api
+   ```
+
+   Create a `.env` file in the smart-contracts directory:
+
+   ```
+   # Hedera JSON RPC relay URLs
+   TESTNET_JSON_RPC_RELAY_URL=https://testnet.hashio.io/api
+   MAINNET_JSON_RPC_RELAY_URL=https://mainnet.hashio.io/api
+
+   # Hedera accounts
+   TESTNET_ACCOUNT_ID=your-testnet-account-id
+   TESTNET_PRIVATE_KEY=your-testnet-private-key
+   MAINNET_ACCOUNT_ID=your-mainnet-account-id
+   MAINNET_PRIVATE_KEY=your-mainnet-private-key
+   ```
+
+4. Start MongoDB:
+   ```bash
+   docker-compose up -d
+   ```
+
+## Running the Application
+
+### Development Mode
+
+Start all services:
+
+```bash
+# Start backend server
+npm run dev:backend
+
+# Start frontend development server
+npm run dev:frontend
+```
+
+Or use the combined script:
+
+```bash
+npm run dev
+```
+
+## Smart Contract Tasks
+
+Hashvertise includes several Hardhat tasks to interact with the smart contracts:
+
+### Deposit HBAR to a Campaign
+
+```bash
+npx hardhat deposit --contract 0.0.1140000 --topicId 0.0.6006038 --amount 0.02 --chain testnet
+```
+
+### Check Deposit Balance
+
+```bash
+npx hardhat check-deposit --contract 0.0.1140000 --address 0.0.5532673 --topicId 0.0.6006038 --chain testnet
+```
+
+### Distribute Prize to Participants
+
+```bash
+npx hardhat distribute-prize --contract 0.0.1140000 --advertiser 0.0.5532673 --topicId 0.0.6006038 --participants 0.0.5532673,0.0.5919443 --amounts 0.005,0.005 --chain testnet
+```
+
+## Database
+
+The project uses MongoDB for data storage:
+
+- Docker Compose configuration is provided for easy setup
+- Mongo Express web interface for database management
+
+### MongoDB Setup
+
+```bash
+# Start MongoDB and Mongo Express
+docker-compose up -d
+```
+
+Access Mongo Express at http://localhost:8081 with:
+
+- Username: root
+- Password: example
+
+**Note:** These are development credentials. Use different credentials for production.
 
 ## Authentication and Campaign Verification
 
@@ -32,79 +191,3 @@ The platform uses Hedera wallet-based authentication:
    - The signature is valid using HashConnect's verification
    - The topic exists on the Hedera network
 4. After verification, the backend sets up a topic listener for the campaign
-
-## Setup
-
-1. Clone the repository
-2. Install dependencies:
-
-   ```
-   npm install
-   ```
-
-3. Set up environment variables:
-
-   - Copy `.env.example` to `.env` in each directory (backend, frontend)
-   - Add your Hedera testnet account ID, private key and other sensitive information to the backend `.env` file
-   - Add your WalletConnect project ID to the frontend `.env` file (required for HashConnect wallet integration)
-
-## Running the Application
-
-Start all services:
-
-```
-# In separate terminals:
-npm run dev:backend   # Start backend server
-npm run dev:frontend  # Start frontend development server
-```
-
-Or use the combined script:
-
-```
-npm run dev
-```
-
-## Usage
-
-1. Open the frontend at http://localhost:3000
-2. Connect your Hedera wallet using the "Connect Wallet" button
-3. Fill out the campaign form with:
-   - Advertiser name
-   - Campaign description (max 100 characters)
-   - Required text for posts (max 50 characters)
-4. Submit the campaign
-5. The backend will automatically start listening for posts that include your required text
-
-## License
-
-[MIT](LICENSE)
-
-## Database
-
-The project uses MongoDB for data storage. A Docker Compose configuration is provided for easy setup.
-
-### Running MongoDB
-
-1. Make sure Docker and Docker Compose are installed on your system
-2. Run the following command from the root of the project:
-
-   ```
-   docker-compose up -d
-   ```
-
-3. This will start:
-
-   - MongoDB server on port 27017
-   - Mongo Express (web-based MongoDB admin interface) on port 8081
-
-4. To stop the database services:
-
-   ```
-   docker-compose down
-   ```
-
-5. Access Mongo Express at http://localhost:8081
-   - Username: root
-   - Password: example
-
-**Note:** These are development credentials. For production, modify the credentials in docker-compose.yaml.
