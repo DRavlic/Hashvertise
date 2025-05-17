@@ -24,6 +24,7 @@ import {
   HEDERA_TESTNET_MIRROR_NODE_URL,
   HEDERA_MIRROR_ACCOUNT_ENDPOINT,
 } from "../common/common.constants";
+import { AccountInfoQuery } from "@hashgraph/sdk";
 
 /**
  * Set up a topic listener for a Hedera topic
@@ -183,23 +184,29 @@ export const verifyCampaignAndCreate = async (
     // Find the user by accountId
     let user = await UserModel.findOne({ accountId: campaignData.accountId });
 
-    // If user doesn't exist, try to get public key from Hedera mirror node
+    // If user doesn't exist, try to get public key and EVM address from Hedera mirror node
     if (!user) {
       try {
+        // Get public key from Hedera mirror node
         const accountUrl = `${HEDERA_TESTNET_MIRROR_NODE_URL}${HEDERA_MIRROR_ACCOUNT_ENDPOINT}${campaignData.accountId}`;
         const response = await fetch(accountUrl);
 
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
-
         const accountData = await response.json();
 
-        if (accountData && accountData.key) {
+        // Get EVM address from Hedera mirror node
+        const accountInfo = await new AccountInfoQuery()
+          .setAccountId(campaignData.accountId)
+          .execute(hederaClient);
+
+        if (accountData && accountData.key && accountInfo.contractAccountId) {
           // Create a new user with the public key from the mirror node
           user = await UserModel.create({
             accountId: campaignData.accountId,
             publicKey: accountData.key.key,
+            evmAddress: accountInfo.contractAccountId,
           });
 
           logger.info(
