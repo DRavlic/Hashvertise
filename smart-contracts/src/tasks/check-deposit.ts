@@ -7,12 +7,13 @@ import {
   PrivateKey,
   AccountId,
   ContractId,
+  AccountInfoQuery,
 } from "@hashgraph/sdk";
 import {
   MAX_GAS,
   TESTNET_ACCOUNT_ID,
   TESTNET_PRIVATE_KEY,
-} from "../../environment";
+} from "../environment";
 
 // Register the check-deposit task
 task("check-deposit", "Check deposit amount for an address and topic")
@@ -53,11 +54,7 @@ async function checkDeposit(
     let contractId: ContractId;
     if (contract.startsWith("0x")) {
       // Convert Ethereum address to Hedera Contract ID format
-      contractId = ContractId.fromEvmAddress(
-        accountId.shard.toNumber(),
-        accountId.realm.toNumber(),
-        contract
-      );
+      contractId = ContractId.fromEvmAddress(0, 0, contract);
     } else {
       // Assume it's already in Hedera format
       contractId = ContractId.fromString(contract);
@@ -65,9 +62,20 @@ async function checkDeposit(
 
     let solPayerAddress: string;
     if (!payerAddress.startsWith("0x")) {
-      // Assume payer address is Hedera account ID and convert to Ethereum address format
-      const accountId = AccountId.fromString(payerAddress);
-      solPayerAddress = accountId.toSolidityAddress();
+      // Get proper Solidity address via AccountInfoQuery
+      // since toSolidityAddress() doesn't work correctly with ECDSA accounts
+      const payerAccountId = AccountId.fromString(payerAddress);
+      const payerInfo = await new AccountInfoQuery()
+        .setAccountId(payerAccountId)
+        .execute(client);
+
+      solPayerAddress = payerInfo.contractAccountId || "";
+      if (!payerInfo.contractAccountId) {
+        throw new Error(
+          `Failed to get Solidity address for account ${payerAddress}`
+        );
+      }
+      console.log(`Payer Solidity address: ${solPayerAddress}`);
     } else {
       // Assume it's already in Ethereum format
       solPayerAddress = payerAddress;

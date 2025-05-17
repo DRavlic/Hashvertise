@@ -8,17 +8,18 @@ import {
   AccountId,
   ContractId,
   HbarUnit,
+  AccountInfoQuery,
 } from "@hashgraph/sdk";
 import {
   MAX_GAS,
   TESTNET_ACCOUNT_ID,
   TESTNET_PRIVATE_KEY,
-} from "../../environment";
+} from "../environment";
 
 // Register the deposit task
 task("deposit", "Deposit HBAR to a contract for a specific topic")
   .addParam("contract", "The contract address")
-  .addParam("topic", "The topic ID")
+  .addParam("topicId", "The topic ID")
   .addParam("amount", "The amount of HBAR to deposit")
   .addOptionalParam(
     "chain",
@@ -26,7 +27,7 @@ task("deposit", "Deposit HBAR to a contract for a specific topic")
     "testnet"
   )
   .setAction(async (taskArgs) => {
-    const { contract, topic: topicId, amount: amountInHbar, chain } = taskArgs;
+    const { contract, topicId, amount: amountInHbar, chain } = taskArgs;
 
     console.log(
       `Depositing ${amountInHbar} HBAR to contract ${contract} for topic ${topicId} on ${chain} network...`
@@ -58,18 +59,27 @@ async function depositHBAR(
     let contractId: ContractId;
     if (contract.startsWith("0x")) {
       // Convert Ethereum address to Hedera Contract ID format
-      contractId = ContractId.fromEvmAddress(
-        accountId.shard.toNumber(),
-        accountId.realm.toNumber(),
-        contract
-      );
+      contractId = ContractId.fromEvmAddress(0, 0, contract);
     } else {
       // Assume it's already in Hedera format
       contractId = ContractId.fromString(contract);
     }
 
+    // Get proper Solidity address via AccountInfoQuery
+    // since toSolidityAddress() doesn't work correctly with ECDSA accounts
+    const accountInfo = await new AccountInfoQuery()
+      .setAccountId(accountId)
+      .execute(client);
+
+    const solPayerAddress = accountInfo.contractAccountId || "";
+    if (!accountInfo.contractAccountId) {
+      throw new Error(
+        `Failed to get Solidity address for account ${accountId.toString()}`
+      );
+    }
+
     const functionParams = new ContractFunctionParameters()
-      .addAddress(accountId.toSolidityAddress())
+      .addAddress(solPayerAddress)
       .addString(topicId);
 
     // Execute the contract call
