@@ -7,8 +7,6 @@
     "test": "hardhat test",
     "deploy:testnet": "hardhat run src/scripts/deploy.ts --network hederaTestnet",
     "deploy:mainnet": "hardhat run src/scripts/deploy.ts --network hederaMainnet",
-    "deposit": "hardhat deposit",
-    "check-deposit": "hardhat check-deposit"
   },
   "keywords": [],
   "author": "",
