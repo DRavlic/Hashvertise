@@ -5,11 +5,11 @@ import {
   MAINNET_JSON_RPC_RELAY_URL,
   TESTNET_PRIVATE_KEY,
   MAINNET_PRIVATE_KEY,
-} from "./environment";
+} from "./src/environment";
 
-// Import tasks
 import "./src/tasks/deposit";
 import "./src/tasks/check-deposit";
+import "./src/tasks/distribute-prize";
 
 const config: HardhatUserConfig = {
   solidity: "0.8.28",
