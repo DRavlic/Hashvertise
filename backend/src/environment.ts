@@ -20,3 +20,7 @@ export const HEDERA_NETWORK = process.env.HEDERA_NETWORK || "testnet";
 // Hedera consensus topic configuration
 export const CHUNK_SIZE = 1024; // 1KB
 export const TOPIC_SYNC_INTERVAL = 5000; // 5 seconds
+
+// X configuration
+export const TWITTERAPI_USER_ID = process.env.TWITTERAPI_USER_ID || "";
+export const TWITTERAPI_API_KEY = process.env.TWITTERAPI_API_KEY || "";

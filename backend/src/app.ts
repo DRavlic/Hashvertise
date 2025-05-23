@@ -3,6 +3,7 @@ import cors from "cors";
 import { errorHandler } from "./common/common.middleware";
 import { hederaClient } from "./common/common.hedera";
 import topicRoutes from "./topic/topic.routes";
+import xRoutes from "./x/x.routes";
 
 // Create Express app
 const app = express();
@@ -25,6 +26,7 @@ app.get("/", (req: Request, res: Response) => {
 
 // Register routes
 app.use("/api/topic", topicRoutes);
+app.use("/api/x", xRoutes);
 
 // Error handler
 app.use(errorHandler);
