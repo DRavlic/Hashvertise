@@ -1,14 +1,10 @@
 import mongoose from "mongoose";
-
-// Default to local docker connection if no MongoDB URI is provided
-const MONGODB_URI =
-  process.env.MONGODB_URI ||
-  "mongodb://root:example@localhost:27017/hashvertise?authSource=admin";
+import { DB } from "./environment";
 
 export const connectDatabase = async (): Promise<void> => {
   try {
     mongoose.set("strictQuery", false);
-    await mongoose.connect(MONGODB_URI);
+    await mongoose.connect(DB);
     console.log("Connected to MongoDB successfully");
   } catch (error) {
     console.error("MongoDB connection error:", error);
