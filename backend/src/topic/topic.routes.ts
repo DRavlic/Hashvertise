@@ -8,7 +8,7 @@ import {
   getCampaigns,
   getCampaign,
 } from "./topic.controller";
-import { validate } from "./topic.middleware";
+import { validateRequest } from "../common/common.middleware";
 import {
   topicListenSchema,
   topicStatusSchema,
@@ -26,14 +26,22 @@ const router = express.Router();
  * @description Set up a topic listener for a Hedera topic
  * @access Public
  */
-router.post("/listen", validate(topicListenSchema), setupHederaTopicListener);
+router.post(
+  "/listen",
+  validateRequest(topicListenSchema),
+  setupHederaTopicListener
+);
 
 /**
  * @route GET /api/topic/status/:topicId
  * @description Check the status of a topic listener
  * @access Public
  */
-router.get("/status/:topicId", validate(topicStatusSchema), checkTopicStatus);
+router.get(
+  "/status/:topicId",
+  validateRequest(topicStatusSchema),
+  checkTopicStatus
+);
 
 /**
  * @route GET /api/topic/messages/:topicId
@@ -42,7 +50,7 @@ router.get("/status/:topicId", validate(topicStatusSchema), checkTopicStatus);
  */
 router.get(
   "/messages/:topicId",
-  validate(topicMessagesSchema),
+  validateRequest(topicMessagesSchema),
   getTopicMessages
 );
 
@@ -53,7 +61,7 @@ router.get(
  */
 router.post(
   "/deactivate/:topicId",
-  validate(topicDeactivateSchema),
+  validateRequest(topicDeactivateSchema),
   deactivateTopicListener
 );
 
@@ -64,7 +72,7 @@ router.post(
  */
 router.post(
   "/campaign/verify",
-  validate(campaignVerifySchema),
+  validateRequest(campaignVerifySchema),
   verifyCampaignAndCreate
 );
 
@@ -73,13 +81,17 @@ router.post(
  * @description Get all campaigns with pagination
  * @access Public
  */
-router.get("/campaigns", validate(campaignsListSchema), getCampaigns);
+router.get("/campaigns", validateRequest(campaignsListSchema), getCampaigns);
 
 /**
  * @route GET /api/topic/campaign/:topicId
  * @description Get a campaign by topic ID
  * @access Public
  */
-router.get("/campaign/:topicId", validate(campaignGetSchema), getCampaign);
+router.get(
+  "/campaign/:topicId",
+  validateRequest(campaignGetSchema),
+  getCampaign
+);
 
 export default router;

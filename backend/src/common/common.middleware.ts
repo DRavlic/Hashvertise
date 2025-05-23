@@ -1,6 +1,33 @@
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
+import { AnyZodObject } from "zod";
 import logger from "./common.instances";
+
+/**
+ * Middleware factory for validating requests against Zod schemas
+ *
+ * @param {AnyZodObject} schema - Zod schema for request validation
+ * @returns {(req: Request, res: Response, next: NextFunction) => Response | void}
+ */
+export const validateRequest =
+  (schema: AnyZodObject) =>
+  (req: Request, res: Response, next: NextFunction): Response | void => {
+    try {
+      schema.parse({
+        body: req.body,
+        query: req.query,
+        params: req.params,
+      });
+      return next();
+    } catch (error: any) {
+      logger.error("Request validation error: " + error);
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        error: "Invalid request data",
+        details: error.errors,
+      });
+    }
+  };
 
 /**
  * Global error handling middleware
