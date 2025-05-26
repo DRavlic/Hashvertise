@@ -6,7 +6,7 @@ import {
   getTopicMessages as getTopicMessagesService,
   deactivateTopicListener as deactivateTopicListenerService,
   parseCampaignMessage,
-  verifySignature,
+  verifySignatureFromHashConnect,
   verifyTopicExists,
   createCampaign,
   countCampaigns,
@@ -232,7 +232,7 @@ export const verifyCampaignAndCreate = async (
     }
 
     // Verify the signature
-    const isSignatureValid = await verifySignature(
+    const isSignatureValid = await verifySignatureFromHashConnect(
       message,
       signature,
       user.publicKey
@@ -244,6 +244,8 @@ export const verifyCampaignAndCreate = async (
         error: "Invalid signature",
       });
     }
+
+    // TO DO: check if we need to wait little bit for mirror node to sync with hedera network before verifying the topic exists
 
     // Verify the topic exists
     const topicExists = await verifyTopicExists(
@@ -267,7 +269,7 @@ export const verifyCampaignAndCreate = async (
       });
     }
 
-    // Set up the topic listener
+    // Set up the topic listener (we're sure the topic exists at this point because we verified it earlier)
     const listenerResult = await setupHederaTopicListenerService(
       campaignData.topicId,
       hederaClient

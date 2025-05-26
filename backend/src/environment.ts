@@ -13,13 +13,18 @@ export const DB =
   "mongodb://root:example@localhost:27017/hashvertise?authSource=admin";
 
 // Hedera configuration
-export const HEDERA_OPERATOR_ID = process.env.HEDERA_OPERATOR_ID || "";
-export const HEDERA_OPERATOR_KEY = process.env.HEDERA_OPERATOR_KEY || "";
+export const HEDERA_OPERATOR_ID_ED25519 =
+  process.env.HEDERA_OPERATOR_ID_ED25519 || "";
+export const HEDERA_OPERATOR_KEY_ED25519 =
+  process.env.HEDERA_OPERATOR_KEY_ED25519 || "";
+export const HEDERA_OPERATOR_ID_ECDSA =
+  process.env.HEDERA_OPERATOR_ID_ECDSA || "";
+export const HEDERA_OPERATOR_KEY_ECDSA =
+  process.env.HEDERA_OPERATOR_KEY_ECDSA || "";
 export const HEDERA_NETWORK = process.env.HEDERA_NETWORK || "testnet";
 
 // Hedera consensus topic configuration
 export const CHUNK_SIZE = 1024; // 1KB
-export const TOPIC_SYNC_INTERVAL = 5000; // 5 seconds
 
 // X configuration
 export const TWITTERAPI_USER_ID = process.env.TWITTERAPI_USER_ID || "";

@@ -8,14 +8,15 @@ import {
   SubscriptionHandle,
   AccountId,
   AccountInfoQuery,
+  PrivateKey,
 } from "@hashgraph/sdk";
 import logger from "./common.instances";
 import {
-  HEDERA_OPERATOR_ID,
-  HEDERA_OPERATOR_KEY,
+  HEDERA_OPERATOR_ID_ED25519,
+  HEDERA_OPERATOR_KEY_ED25519,
+  HEDERA_OPERATOR_KEY_ECDSA,
   HEDERA_NETWORK,
   CHUNK_SIZE,
-  TOPIC_SYNC_INTERVAL,
 } from "../environment";
 
 /**
@@ -98,9 +99,6 @@ export async function setupTopicListener(
   ) => Promise<void>
 ): Promise<SubscriptionHandle | undefined> {
   try {
-    // Wait for mirror node to sync with main network
-    await new Promise((resolve) => setTimeout(resolve, TOPIC_SYNC_INTERVAL));
-
     const subscription = new TopicMessageQuery()
       .setTopicId(topicId)
       .subscribe(client, null, async (message: TopicMessage | null) => {
@@ -130,7 +128,7 @@ export async function setupTopicListener(
 }
 
 /**
- * Gets the public key of an account
+ * Gets the public key from account ID
  *
  * @param {Client} client - Hedera client instance
  * @param {AccountId} accountId - Account ID to get public key for
@@ -156,6 +154,63 @@ export const getAccountPublicKey = async (
 };
 
 /**
+ * Signs a message with a private key of client operator
+ *
+ * @param {string} message - Message to sign
+ * @returns {string} The signature of the message
+ */
+export const signMessage = (message: string): string => {
+  try {
+    if (!HEDERA_OPERATOR_KEY_ECDSA) {
+      throw new Error(
+        "HEDERA_OPERATOR_KEY_ECDSA must be set in environment variables"
+      );
+    }
+
+    const privKey = PrivateKey.fromStringECDSA(HEDERA_OPERATOR_KEY_ECDSA);
+    const messageBytes = Buffer.from(message);
+    const signature = privKey.sign(messageBytes);
+
+    return Buffer.from(signature).toString("hex");
+  } catch (error: any) {
+    logger.error(`Error signing message: ${error.message}`);
+    return "";
+  }
+};
+
+/**
+ * Verifies a signature of a message with a public key
+ *
+ * @param {string} message - Message to verify
+ * @param {string} signature - Signature to verify
+ * @returns {boolean} Whether the signature is valid
+ */
+export const verifySignature = (
+  message: string,
+  signature: string
+): boolean => {
+  try {
+    if (!HEDERA_OPERATOR_KEY_ECDSA) {
+      throw new Error(
+        "HEDERA_OPERATOR_KEY_ECDSA must be set in environment variables"
+      );
+    }
+
+    const privKey = PrivateKey.fromStringECDSA(HEDERA_OPERATOR_KEY_ECDSA);
+    const pubKey = privKey.publicKey;
+    const messageBytes = Buffer.from(message);
+    const signatureBytes = Buffer.from(signature, "hex");
+
+    const isValid = pubKey.verify(messageBytes, signatureBytes);
+
+    return isValid;
+  } catch (error: any) {
+    logger.error(`Error verifying signature: ${error.message}`);
+    return false;
+  }
+};
+
+/**
  * Initialize a Hedera client with the configured credentials
  *
  * @returns {Client} Configured Hedera client instance
@@ -166,13 +221,13 @@ export const initializeHederaClient = (): Client => {
   const client =
     HEDERA_NETWORK === "mainnet" ? Client.forMainnet() : Client.forTestnet();
 
-  if (!HEDERA_OPERATOR_ID || !HEDERA_OPERATOR_KEY) {
+  if (!HEDERA_OPERATOR_ID_ED25519 || !HEDERA_OPERATOR_KEY_ED25519) {
     throw new Error(
-      "HEDERA_OPERATOR_ID and HEDERA_OPERATOR_KEY must be set in environment variables"
+      "HEDERA_OPERATOR_ID_ED25519 and HEDERA_OPERATOR_KEY_ED25519 must be set in environment variables"
     );
   }
 
-  client.setOperator(HEDERA_OPERATOR_ID, HEDERA_OPERATOR_KEY);
+  client.setOperator(HEDERA_OPERATOR_ID_ED25519, HEDERA_OPERATOR_KEY_ED25519);
   logger.info(`Initialized Hedera client for ${HEDERA_NETWORK}`);
 
   return client;
