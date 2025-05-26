@@ -1,4 +1,10 @@
-import { Client, TopicId, SubscriptionHandle } from "@hashgraph/sdk";
+import {
+  Client,
+  TopicId,
+  SubscriptionHandle,
+  PublicKey,
+  TopicInfoQuery,
+} from "@hashgraph/sdk";
 import {
   TopicListenerModel,
   TopicMessageModel,
@@ -13,13 +19,42 @@ import {
   ParsedCampaignData,
   ParsedTopicMessageData,
 } from "./topic.interfaces";
-import { setupTopicListener } from "../common/common.hedera";
-import { PublicKey, TopicInfoQuery } from "@hashgraph/sdk";
+import { setupTopicListener, verifySignature } from "../common/common.hedera";
 import { createUtcDate } from "../common/common.dates";
+import { fetchUserInfo } from "../x/x.service";
+import { UserXModel } from "../x/x.model";
 
 // Store active subscriptions in memory
 // Note: this will be lost on server restart but we'll recover them from the database
 const activeSubscriptions = new Map<string, SubscriptionHandle>();
+
+/**
+ * Parse topic message data from a message
+ *
+ * @param {string} message - The message content to parse
+ * @returns {ParsedTopicMessageData | null} Parsed topic message data or null if parsing fails
+ */
+export const parseTopicMessage = (
+  message: string
+): ParsedTopicMessageData | null => {
+  try {
+    // Parse the comma-separated values from the message
+    const [accountId, XHandle] = message.split(", ");
+
+    // Validate all required fields are present
+    if (!accountId || !XHandle) {
+      return null;
+    }
+
+    return {
+      accountId,
+      XHandle,
+    };
+  } catch (error) {
+    logger.error(`Error parsing topic message: ${error}`);
+    return null;
+  }
+};
 
 /**
  * Handles incoming topic messages by saving them to the database
@@ -37,14 +72,50 @@ const handleTopicMessage = async (
   try {
     // Parse the message in format: "<accountId>, <XHandle>"
     const parsedMessage = parseTopicMessage(message);
+
+    // If the message is not in the correct format, check if it's a campaign over message
     if (!parsedMessage) {
+      if (message.includes("Campaign over for topic")) {
+        const [campaignMessage, signaturePart] = message.split(":");
+        const isValid = verifySignature(campaignMessage, signaturePart);
+        if (isValid) {
+          await deactivateTopicListener(topicId);
+
+          logger.info(
+            `Campaign finished: deactivating topic listener for topic ${topicId}`
+          );
+          return;
+        } else {
+          logger.info(
+            `Invalid signature for campaign over message for topic ${topicId}, skipping...`
+          );
+          return;
+        }
+      }
+
       logger.info(`Invalid message format: "${message}", skipping...`);
       return;
     }
 
-    // TO DO: Check if this X handle actually exists on X
+    // Check if this X handle actually exists on X
+    const userX = await UserXModel.findOne({ userName: parsedMessage.XHandle });
+    if (!userX) {
+      const userInfo = await fetchUserInfo(parsedMessage.XHandle);
+      if (!userInfo.success) {
+        logger.info(
+          `User ${parsedMessage.XHandle} not found on X, skipping...`
+        );
+        return;
+      }
 
-    // Check if this X handle already exists for this topic
+      await UserXModel.create({
+        xId: userInfo.userInfo!.id,
+        userName: parsedMessage.XHandle,
+        createdOnX: createUtcDate(),
+      });
+    }
+
+    // Check if this X handle already applied for campaing of this topic
     const existingXHandle = await TopicMessageModel.findOne({
       topicId,
       message: { $regex: `, ${parsedMessage.XHandle}$` },
@@ -67,38 +138,13 @@ const handleTopicMessage = async (
     });
     logger.info(`Saved new message for topic ${topicId}`);
   } catch (error: any) {
+    // TO DO: see if this and other similar error logs are necessary
     logger.error(
       `Error saving new message for topic ${topicId}: ${error.message}`
     );
     throw new Error(
       `Error saving new message for topic ${topicId}: ${error.message}`
     );
-  }
-};
-
-/**
- * Parse topic message data from a message
- *
- * @param {string} message - The message content to parse
- * @returns {ParsedTopicMessageData | null} Parsed topic message data or null if parsing fails
- */
-const parseTopicMessage = (message: string): ParsedTopicMessageData | null => {
-  try {
-    // Parse the comma-separated values from the message
-    const [accountId, XHandle] = message.split(", ");
-
-    // Validate all required fields are present
-    if (!accountId || !XHandle) {
-      return null;
-    }
-
-    return {
-      accountId,
-      XHandle,
-    };
-  } catch (error) {
-    logger.error(`Error parsing topic message: ${error}`);
-    return null;
   }
 };
 
@@ -121,7 +167,7 @@ export const initializeTopicListeners = async (
     }
 
     // Get only topic IDs of campaigns that haven't ended yet
-    const currentDate = new Date();
+    const currentDate = createUtcDate();
     const activeCampaignResults = await CampaignModel.find(
       { endDate: { $gte: currentDate } },
       { topicId: 1, _id: 0 }
@@ -293,8 +339,7 @@ export const getTopicStatus = async (
  *
  * @param {string} topicId - Topic ID to get messages for
  * @param {number} [limit=DEFAULT_TOPIC_MESSAGES_LIMIT] - Maximum number of messages to return
- * @returns {Promise<{success: boolean, messages?: any[], error?: string, details?: string}>}
- *          Response with messages or error details
+ * @returns {Promise<TopicMessageModel[]>} Array of topic messages sorted by consensus timestamp ascending
  */
 export const getTopicMessages = async (
   topicId: string,
@@ -302,7 +347,7 @@ export const getTopicMessages = async (
 ) => {
   try {
     const messages = await TopicMessageModel.find({ topicId })
-      .sort({ consensusTimestamp: -1 })
+      .sort({ consensusTimestamp: 1 })
       .limit(limit);
 
     return messages;
@@ -325,8 +370,7 @@ export const getTopicMessages = async (
  * @throws {Error} If deactivation fails
  */
 export const deactivateTopicListener = async (
-  topicId: string,
-  client: Client
+  topicId: string
 ): Promise<void> => {
   try {
     // Update database record first
@@ -414,7 +458,7 @@ export const parseCampaignMessage = (
  * @param {string} publicKey - The public key to verify against
  * @returns {Promise<boolean>} Whether the signature is valid
  */
-export const verifySignature = async (
+export const verifySignatureFromHashConnect = async (
   message: string,
   signature: string,
   publicKey: string
@@ -477,8 +521,8 @@ export const createCampaign = async (
       prizePool: campaignData.prizePool,
       requirement: campaignData.requirement,
       txId: campaignData.txId,
-      startDate: new Date(campaignData.startDate),
-      endDate: new Date(campaignData.endDate),
+      startDate: createUtcDate(new Date(campaignData.startDate)),
+      endDate: createUtcDate(new Date(campaignData.endDate)),
     });
 
     return {
