@@ -3,6 +3,7 @@ import {
   getModelForClass,
   modelOptions,
   Severity,
+  index,
 } from "@typegoose/typegoose";
 
 @modelOptions({
@@ -24,18 +25,18 @@ export class TopicListener {
 
 @modelOptions({
   schemaOptions: {
-    timestamps: true,
     collection: "topicMessages",
   },
   options: {
     allowMixed: Severity.ALLOW,
   },
 })
+@index({ topicId: 1, message: 1 }, { unique: true })
 export class TopicMessage {
   @prop({ required: true, index: true })
   public topicId!: string;
 
-  @prop({ required: true, unique: true })
+  @prop({ required: true })
   public message!: string;
 
   @prop({ required: true, index: true })
