@@ -1,10 +1,15 @@
-export interface TwitterApiResponse {
-  tweets?: Tweet[];
-  has_next_page?: boolean;
-  next_cursor?: string;
-  status?: string;
-  message?: string;
-  error?: number;
+export interface TwitterUserLastTweetsResponse {
+  status: string;
+  code: number;
+  msg: string;
+  data?: TwitterUserTweetsData;
+}
+
+export interface TwitterUserTweetsData {
+  pin_tweet: any;
+  tweets: Tweet[];
+  has_next_page: boolean;
+  next_cursor: string;
 }
 
 export interface Tweet {
@@ -65,4 +70,56 @@ export interface UserMention {
   id_str: string;
   name: string;
   screen_name: string;
+}
+
+export interface DistributeRewardResponse {
+  success: boolean;
+  topicId: string;
+  result: string;
+  message?: string;
+  error?: string;
+}
+
+export interface TwitterUserInfoResponse {
+  status: string;
+  msg: string;
+  data: TwitterUserInfo | null;
+}
+
+export interface TwitterUserInfo {
+  id: string;
+  name: string;
+  userName: string;
+  location: string;
+  url: string;
+  description: string;
+  protected: boolean;
+  isVerified: boolean;
+  isBlueVerified: boolean;
+  verifiedType: string | null;
+  followers: number;
+  following: number;
+  favouritesCount: number;
+  statusesCount: number;
+  mediaCount: number;
+  createdAt: string;
+  coverPicture: string;
+  profilePicture: string;
+  canDm: boolean;
+  isAutomated: boolean;
+  automatedBy: string | null;
+}
+
+export interface UserTweetsServiceResponse {
+  success: boolean;
+  tweets?: Tweet[];
+  hasNextPage?: boolean;
+  nextCursor?: string;
+  error?: string;
+}
+
+export interface UserInfoServiceResponse {
+  success: boolean;
+  userInfo?: TwitterUserInfo;
+  error?: string;
 }
