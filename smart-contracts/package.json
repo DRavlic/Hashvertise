@@ -6,7 +6,7 @@
     "compile": "hardhat compile",
     "test": "hardhat test",
     "deploy:testnet": "hardhat run src/scripts/deploy.ts --network hederaTestnet",
-    "deploy:mainnet": "hardhat run src/scripts/deploy.ts --network hederaMainnet",
+    "deploy:mainnet": "hardhat run src/scripts/deploy.ts --network hederaMainnet"
   },
   "keywords": [],
   "author": "",
