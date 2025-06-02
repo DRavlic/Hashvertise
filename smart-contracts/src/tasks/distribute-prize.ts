@@ -7,13 +7,12 @@ import {
   AccountId,
   ContractId,
   AccountInfoQuery,
-  Hbar,
-  HbarUnit,
 } from "@hashgraph/sdk";
 import {
   MAX_GAS,
   TESTNET_ACCOUNT_ID,
   TESTNET_PRIVATE_KEY,
+  TINYBARS_PER_HBAR,
 } from "../environment";
 
 // Register the distribute-prize task
@@ -140,7 +139,7 @@ async function distributePrize(
       .addAddressArray(solParticipants)
       .addUint256Array(
         amounts.map((amount) =>
-          Hbar.from(parseFloat(amount), HbarUnit.Hbar).toTinybars()
+          Math.floor(parseFloat(amount) * TINYBARS_PER_HBAR)
         )
       );
 

@@ -12,17 +12,15 @@ import {
   ContractExecuteTransaction,
   ContractFunctionParameters,
   ContractId,
-  Hbar,
-  HbarUnit,
 } from "@hashgraph/sdk";
 import logger from "./common.instances";
 import {
-  HEDERA_OPERATOR_ID_ED25519,
-  HEDERA_OPERATOR_KEY_ED25519,
+  HEDERA_OPERATOR_ID_ECDSA,
   HEDERA_OPERATOR_KEY_ECDSA,
   HEDERA_NETWORK,
   CHUNK_SIZE,
   MAX_GAS,
+  TINYBARS_PER_HBAR,
 } from "../environment";
 import {
   HEDERA_TESTNET_MIRROR_NODE_URL,
@@ -298,13 +296,18 @@ export const initializeHederaClient = (): Client => {
   const client =
     HEDERA_NETWORK === "mainnet" ? Client.forMainnet() : Client.forTestnet();
 
-  if (!HEDERA_OPERATOR_ID_ED25519 || !HEDERA_OPERATOR_KEY_ED25519) {
+  if (!HEDERA_OPERATOR_ID_ECDSA || !HEDERA_OPERATOR_KEY_ECDSA) {
     throw new Error(
-      "HEDERA_OPERATOR_ID_ED25519 and HEDERA_OPERATOR_KEY_ED25519 must be set in environment variables"
+      "HEDERA_OPERATOR_ID_ECDSA and HEDERA_OPERATOR_KEY_ECDSA must be set in environment variables"
     );
   }
 
-  client.setOperator(HEDERA_OPERATOR_ID_ED25519, HEDERA_OPERATOR_KEY_ED25519);
+  const operatorAccountId = AccountId.fromString(HEDERA_OPERATOR_ID_ECDSA);
+  const operatorPrivateKey = PrivateKey.fromStringECDSA(
+    HEDERA_OPERATOR_KEY_ECDSA
+  );
+
+  client.setOperator(operatorAccountId, operatorPrivateKey);
   logger.info(`Initialized Hedera client for ${HEDERA_NETWORK}`);
 
   return client;
@@ -354,7 +357,7 @@ export const distributePrizeToParticipants = async (
 
     // Convert HBAR amounts to tinybars for smart contract
     const amountsInTinybars = amounts.map((amount) =>
-      Hbar.from(amount, HbarUnit.Hbar).toTinybars()
+      Math.floor(amount * TINYBARS_PER_HBAR)
     );
 
     // Prepare function parameters

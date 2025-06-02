@@ -19,4 +19,5 @@ export const TESTNET_JSON_RPC_RELAY_URL =
 export const MAINNET_JSON_RPC_RELAY_URL =
   process.env.MAINNET_JSON_RPC_RELAY_URL || "https://mainnet.hashio.io/api";
 
-export const MAX_GAS = 1000000;
+export const MAX_GAS = 1_000_000;
+export const TINYBARS_PER_HBAR = 100_000_000; // 1 HBAR = 100,000,000 tinybars
