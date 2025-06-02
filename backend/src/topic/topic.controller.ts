@@ -19,12 +19,7 @@ import {
   DEFAULT_PAGE,
   DEFAULT_CAMPAIGNS_LIMIT,
 } from "./topic.constants";
-import { UserModel } from "../common/common.model";
-import {
-  HEDERA_TESTNET_MIRROR_NODE_URL,
-  HEDERA_MIRROR_ACCOUNT_ENDPOINT,
-} from "../common/common.constants";
-import { AccountInfoQuery } from "@hashgraph/sdk";
+import { UserModel } from "../user/user.model";
 
 /**
  * Set up a topic listener for a Hedera topic
@@ -157,7 +152,7 @@ export const deactivateTopicListener = async (
 };
 
 /**
- * Verify campaign signature and create a campaign
+ * Verify a signed campaign message and create the campaign
  *
  * @param {Request} req - Express request object containing message and signature
  * @param {Response} res - Express response object
@@ -171,6 +166,13 @@ export const verifyCampaignAndCreate = async (
     const { message, signature } = req.body;
     const hederaClient = req.app.locals.hederaClient;
 
+    if (!message || !signature) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        error: "Message and signature are required",
+      });
+    }
+
     // Parse the campaign data from the message
     const campaignData = parseCampaignMessage(message);
     if (!campaignData) {
@@ -180,64 +182,23 @@ export const verifyCampaignAndCreate = async (
       });
     }
 
-    // Find the user by accountId
-    let user = await UserModel.findOne({ accountId: campaignData.accountId });
-
-    // If user doesn't exist, try to get public key and EVM address from Hedera mirror node
-    if (!user) {
-      try {
-        // Get public key from Hedera mirror node
-        const accountUrl = `${HEDERA_TESTNET_MIRROR_NODE_URL}${HEDERA_MIRROR_ACCOUNT_ENDPOINT}${campaignData.accountId}`;
-        const response = await fetch(accountUrl);
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const accountData = await response.json();
-
-        // Get EVM address from Hedera mirror node
-        const accountInfo = await new AccountInfoQuery()
-          .setAccountId(campaignData.accountId)
-          .execute(hederaClient);
-
-        if (accountData && accountData.key && accountInfo.contractAccountId) {
-          // Create a new user with the public key from the mirror node
-          user = await UserModel.create({
-            accountId: campaignData.accountId,
-            publicKey: accountData.key.key,
-            evmAddress: accountInfo.contractAccountId,
-          });
-
-          logger.info(
-            `Created new user from mirror node data: ${campaignData.accountId}`
-          );
-        } else {
-          return res.status(StatusCodes.NOT_FOUND).json({
-            success: false,
-            error:
-              "Could not retrieve valid public key from Hedera network - user not found",
-          });
-        }
-      } catch (error: any) {
-        logger.error(
-          `Error retrieving account data from mirror node: ${error.message}`
-        );
-        return res.status(StatusCodes.NOT_FOUND).json({
-          success: false,
-          error:
-            "Error retrieving account data from Hedera network - user not found",
-        });
-      }
+    // Get the public key for the advertiser (should already exist since validation was done)
+    const user = await UserModel.findOne({ accountId: campaignData.accountId });
+    if (!user || !user.publicKey) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        success: false,
+        error: "User not found. Please validate user info first.",
+      });
     }
 
     // Verify the signature
-    const isSignatureValid = await verifySignatureFromHashConnect(
+    const isValidSignature = await verifySignatureFromHashConnect(
       message,
       signature,
       user.publicKey
     );
 
-    if (!isSignatureValid) {
+    if (!isValidSignature) {
       return res.status(StatusCodes.UNAUTHORIZED).json({
         success: false,
         error: "Invalid signature",
@@ -246,15 +207,16 @@ export const verifyCampaignAndCreate = async (
 
     // TO DO: check if we need to wait little bit for mirror node to sync with hedera network before verifying the topic exists
 
-    // Verify the topic exists
+    // Verify the topic exists on Hedera
     const topicExists = await verifyTopicExists(
       campaignData.topicId,
       hederaClient
     );
+
     if (!topicExists) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
+      return res.status(StatusCodes.NOT_FOUND).json({
         success: false,
-        error: "Topic does not exist",
+        error: "Topic not found on Hedera network",
       });
     }
 
@@ -275,21 +237,21 @@ export const verifyCampaignAndCreate = async (
     );
 
     if (!listenerResult.success) {
-      // If setting up listener fails, still return success since the campaign was created
-      logger.warn(
+      logger.error(
         `Failed to set up listener for campaign: ${listenerResult.error}`
       );
+      throw new Error(listenerResult.error);
     }
 
     return res.status(StatusCodes.CREATED).json({
       success: true,
       campaign: createResult.campaign,
-      message: "Campaign created successfully",
+      message: "Campaign verified and created successfully",
     });
   } catch (error: any) {
     logger.error("Error in verifyCampaignAndCreate controller:", error);
-
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
       error: "Internal server error",
       details: error.message || String(error),
     });

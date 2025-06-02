@@ -21,8 +21,8 @@ import {
 } from "./topic.interfaces";
 import { setupTopicListener, verifySignature } from "../common/common.hedera";
 import { createUtcDate } from "../common/common.dates";
-import { fetchUserInfo } from "../x/x.service";
 import { UserXModel } from "../x/x.model";
+import { UserModel } from "../user/user.model";
 
 // Store active subscriptions in memory
 // Note: this will be lost on server restart but we'll recover them from the database
@@ -97,22 +97,24 @@ const handleTopicMessage = async (
       return;
     }
 
-    // Check if this X handle actually exists on X
+    // Check if this account ID exists in our user database
+    const user = await UserModel.findOne({
+      accountId: parsedMessage.accountId,
+    });
+    if (!user) {
+      logger.info(
+        `Account ${parsedMessage.accountId} not found in our database, skipping...`
+      );
+      return;
+    }
+
+    // Check if this X handle actually exists in our database (and thus on X)
     const userX = await UserXModel.findOne({ userName: parsedMessage.XHandle });
     if (!userX) {
-      const userInfo = await fetchUserInfo(parsedMessage.XHandle);
-      if (!userInfo.success) {
-        logger.info(
-          `User ${parsedMessage.XHandle} not found on X, skipping...`
-        );
-        return;
-      }
-
-      await UserXModel.create({
-        xId: userInfo.userInfo!.id,
-        userName: parsedMessage.XHandle,
-        createdOnX: createUtcDate(),
-      });
+      logger.info(
+        `X handle ${parsedMessage.XHandle} not found in our database, skipping...`
+      );
+      return;
     }
 
     // Check if this X handle already applied for campaing of this topic
