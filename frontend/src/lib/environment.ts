@@ -8,6 +8,7 @@ export const API_URL =
 
 // API endpoints
 export const API_ENDPOINTS = {
+  VALIDATE_USER: `${API_URL}/user/validate`,
   VERIFY_CAMPAIGN: `${API_URL}/topic/campaign/verify`,
   GET_CAMPAIGNS: `${API_URL}/topic/campaigns`,
   GET_CAMPAIGN: (topicId: string) => `${API_URL}/topic/campaign/${topicId}`,

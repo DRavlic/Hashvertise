@@ -4,6 +4,7 @@ import { errorHandler } from "./common/common.middleware";
 import { hederaClient } from "./common/common.hedera";
 import topicRoutes from "./topic/topic.routes";
 import xRoutes from "./x/x.routes";
+import userRoutes from "./user/user.routes";
 
 // Create Express app
 const app = express();
@@ -25,6 +26,7 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 // Register routes
+app.use("/api/user", userRoutes);
 app.use("/api/topic", topicRoutes);
 app.use("/api/x", xRoutes);
 
