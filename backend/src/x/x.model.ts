@@ -8,7 +8,7 @@ import {
 @modelOptions({
   schemaOptions: {
     timestamps: true,
-    collection: "UserX",
+    collection: "usersX",
   },
   options: {
     allowMixed: Severity.ALLOW,
