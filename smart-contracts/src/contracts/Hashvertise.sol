@@ -86,7 +86,7 @@ contract Hashvertise is IHashvertise {
 
             uint256 amount = amounts[i];
             require(
-                amount > 0 && amount <= prizeAmount / 2 + 1,
+                amount > 0 && amount <= prizeAmount,
                 "Amount must be greater than 0 and less than or equal to the available prize"
             );
 
