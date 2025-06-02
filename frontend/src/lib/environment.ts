@@ -6,6 +6,11 @@ export const WALLET_CONNECT_PROJECT_ID =
 export const API_URL =
   import.meta.env.VITE_API_URL || "http://localhost:3200/api";
 
+// Smart contract configuration
+export const HASHVERTISE_SMART_CONTRACT_ADDRESS =
+  import.meta.env.VITE_HASHVERTISE_SMART_CONTRACT_ADDRESS || "";
+export const MAX_GAS = 1000000;
+
 // API endpoints
 export const API_ENDPOINTS = {
   VALIDATE_USER: `${API_URL}/user/validate`,

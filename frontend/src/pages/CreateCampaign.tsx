@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWallet } from "../hooks/useWallet";
-import { createTopic, signMessage } from "../lib/wallet";
+import { createTopic, signMessage, depositToContract } from "../lib/wallet";
 import { showError, showSuccess, getErrorMessage } from "../lib/toast";
 import { HashConnectConnectionState } from "hashconnect";
 import { API_ENDPOINTS } from "../lib/environment";
@@ -277,7 +277,7 @@ export function CreateCampaign() {
       setCurrentStep(CreationStep.CREATING_TOPIC);
       const topicResponse = await createTopic();
 
-      if (!topicResponse) {
+      if (!topicResponse || !topicResponse.topicId || !topicResponse.txId) {
         // If createTopic returns null, it already showed appropriate error messages
         setIsSubmitting(false);
         setCurrentStep(CreationStep.IDLE);
@@ -286,13 +286,28 @@ export function CreateCampaign() {
 
       const { topicId, txId } = topicResponse;
 
+      // Step 2: Deposit HBAR to smart contract
+      setCurrentStep(CreationStep.DEPOSITING_HBAR);
+      const depositResponse = await depositToContract(
+        topicId.toString(),
+        formData.prizePool,
+        validateData.user.evmAddress
+      );
+
+      if (!depositResponse) {
+        // If depositToContract returns null, it already showed appropriate error messages
+        setIsSubmitting(false);
+        setCurrentStep(CreationStep.IDLE);
+        return;
+      }
+
       // Convert dates to UTC for backend
       const startDateUTC = localToUtc(formData.startDate);
       const endDateUTC = localToUtc(formData.endDate);
 
       const message = `${txId}, ${topicId}, ${formData.name}, ${accountId}, ${formData.prizePool}, ${formData.requirement}, ${startDateUTC}, ${endDateUTC}`;
 
-      // Step 2: Sign the message
+      // Step 3: Sign the message
       setCurrentStep(CreationStep.SIGNING_DATA);
       const signature = await signMessage(message);
 
@@ -303,7 +318,7 @@ export function CreateCampaign() {
         return;
       }
 
-      // Step 3: Send to backend and create the campaign
+      // Step 4: Send to backend and create the campaign
       setCurrentStep(CreationStep.CREATING_CAMPAIGN);
       const response = await fetch(API_ENDPOINTS.VERIFY_CAMPAIGN, {
         method: "POST",
@@ -343,6 +358,8 @@ export function CreateCampaign() {
         return "Getting User Info...";
       case CreationStep.CREATING_TOPIC:
         return "Creating Topic...";
+      case CreationStep.DEPOSITING_HBAR:
+        return "Depositing HBAR...";
       case CreationStep.SIGNING_DATA:
         return "Signing Data...";
       case CreationStep.CREATING_CAMPAIGN:

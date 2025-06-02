@@ -4,13 +4,22 @@ import {
   SessionData,
 } from "hashconnect";
 import { APP_METADATA } from "./constants";
-import { WALLET_CONNECT_PROJECT_ID } from "./environment";
+import {
+  WALLET_CONNECT_PROJECT_ID,
+  HASHVERTISE_SMART_CONTRACT_ADDRESS,
+  MAX_GAS,
+} from "./environment";
 import {
   AccountId,
   LedgerId,
   TopicCreateTransaction,
   TopicId,
   TopicMessageSubmitTransaction,
+  ContractExecuteTransaction,
+  ContractFunctionParameters,
+  ContractId,
+  Hbar,
+  HbarUnit,
 } from "@hashgraph/sdk";
 import { showError, showSuccess, getErrorMessage } from "./toast";
 
@@ -243,4 +252,70 @@ export function subscribeToPairingData(
   return () => {
     pairingListeners = pairingListeners.filter((l) => l !== listener);
   };
+}
+
+export async function depositToContract(
+  topicId: string,
+  amountInHbar: number,
+  payerEvmAddress: string
+) {
+  if (!hashconnect || !pairingData) {
+    showError("Wallet not connected. Please connect your wallet first.");
+    return null;
+  }
+
+  const accountId = getAccountId();
+  if (!accountId) {
+    showError("No account ID found in pairing data.");
+    return null;
+  }
+
+  if (!HASHVERTISE_SMART_CONTRACT_ADDRESS) {
+    showError("Smart contract address not configured.");
+    return null;
+  }
+
+  try {
+    const signer = hashconnect.getSigner(AccountId.fromString(accountId));
+
+    // Handle contract address format (0x vs Hedera format)
+    let contractId: ContractId;
+    if (HASHVERTISE_SMART_CONTRACT_ADDRESS.startsWith("0x")) {
+      // Convert Ethereum address to Hedera Contract ID format
+      contractId = ContractId.fromEvmAddress(
+        0,
+        0,
+        HASHVERTISE_SMART_CONTRACT_ADDRESS
+      ); // TO DO: handle shard and realm properly
+    } else {
+      // Assume it's already in Hedera format
+      contractId = ContractId.fromString(HASHVERTISE_SMART_CONTRACT_ADDRESS);
+    }
+
+    // Prepare function parameters
+    const functionParams = new ContractFunctionParameters()
+      .addAddress(payerEvmAddress)
+      .addString(topicId);
+
+    // Create the contract transaction
+    const tx = await new ContractExecuteTransaction()
+      .setContractId(contractId)
+      .setFunction("deposit", functionParams)
+      .setGas(MAX_GAS)
+      .setPayableAmount(Hbar.from(amountInHbar, HbarUnit.Hbar))
+      .freezeWithSigner(signer);
+
+    const response = await tx.executeWithSigner(signer);
+    await response.getReceiptWithSigner(signer);
+
+    showSuccess("HBAR deposited to contract successfully");
+
+    return {
+      transactionId: response.transactionId.toString(),
+    };
+  } catch (error) {
+    showError(`Error depositing to contract: ${getErrorMessage(error)}`);
+    console.error("Error depositing to contract:", getErrorMessage(error));
+    return null;
+  }
 }
