@@ -9,6 +9,11 @@ import {
   AccountId,
   AccountInfoQuery,
   PrivateKey,
+  ContractExecuteTransaction,
+  ContractFunctionParameters,
+  ContractId,
+  Hbar,
+  HbarUnit,
 } from "@hashgraph/sdk";
 import logger from "./common.instances";
 import {
@@ -17,7 +22,12 @@ import {
   HEDERA_OPERATOR_KEY_ECDSA,
   HEDERA_NETWORK,
   CHUNK_SIZE,
+  MAX_GAS,
 } from "../environment";
+import {
+  HEDERA_TESTNET_MIRROR_NODE_URL,
+  HEDERA_MIRROR_ACCOUNT_ENDPOINT,
+} from "./common.constants";
 
 /**
  * Submit a message to a Hedera consensus topic
@@ -128,6 +138,73 @@ export async function setupTopicListener(
 }
 
 /**
+ * Gets the public key from account ID using Hedera mirror node REST API
+ *
+ * @param {string} accountId - Account ID to get public key for
+ * @returns {Promise<{success: boolean, publicKey?: string, error?: string}>} Result with public key or error
+ */
+export const getAccountPublicKeyFromMirrorNode = async (
+  accountId: string
+): Promise<string | null> => {
+  try {
+    logger.info(
+      `Getting public key from mirror node for account: ${accountId}`
+    );
+
+    const accountUrl = `${HEDERA_TESTNET_MIRROR_NODE_URL}${HEDERA_MIRROR_ACCOUNT_ENDPOINT}/${accountId}`;
+    const response = await fetch(accountUrl);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const accountData = await response.json();
+
+    if (accountData && accountData.key && accountData.key.key) {
+      return accountData.key.key;
+    } else {
+      return null;
+    }
+  } catch (error: any) {
+    logger.error(
+      `Error getting public key from mirror node for account ${accountId}: ${error.message}`
+    );
+    return null;
+  }
+};
+
+/**
+ * Gets the EVM address from account ID using Hedera SDK
+ *
+ * @param {Client} client - Hedera client instance
+ * @param {string} accountId - Account ID to get EVM address for
+ * @returns {Promise<{success: boolean, evmAddress?: string, error?: string}>} Result with EVM address or error
+ */
+export const getAccountEvmAddress = async (
+  client: Client,
+  accountId: string
+): Promise<string | null> => {
+  try {
+    logger.info(`Getting EVM address for account: ${accountId}`);
+
+    const accountInfo = await new AccountInfoQuery()
+      .setAccountId(AccountId.fromString(accountId))
+      .execute(client);
+
+    if (accountInfo.contractAccountId) {
+      return accountInfo.contractAccountId;
+    } else {
+      return null;
+    }
+  } catch (error: any) {
+    logger.error(
+      `Error getting EVM address for account ${accountId}: ${error.message}`
+    );
+    return null;
+  }
+};
+
+/**
  * Gets the public key from account ID
  *
  * @param {Client} client - Hedera client instance
@@ -231,6 +308,86 @@ export const initializeHederaClient = (): Client => {
   logger.info(`Initialized Hedera client for ${HEDERA_NETWORK}`);
 
   return client;
+};
+
+/**
+ * Distributes prizes to participants through the Hashvertise smart contract
+ *
+ * @param {Client} client - Hedera client instance
+ * @param {string} contractAddress - The smart contract address (Hedera format or 0x format)
+ * @param {string} advertiserEvmAddress - The advertiser's EVM address
+ * @param {string} topicId - The topic ID
+ * @param {string[]} participantEvmAddresses - Array of participant EVM addresses
+ * @param {number[]} amounts - Array of amounts in HBAR
+ * @returns {Promise<{success: boolean, transactionId?: string, error?: string}>} Distribution result
+ */
+export const distributePrizeToParticipants = async (
+  client: Client,
+  contractAddress: string,
+  advertiserEvmAddress: string,
+  topicId: string,
+  participantEvmAddresses: string[],
+  amounts: number[]
+): Promise<string | null> => {
+  try {
+    if (!HEDERA_OPERATOR_KEY_ECDSA) {
+      throw new Error(
+        "HEDERA_OPERATOR_KEY_ECDSA must be set in environment variables"
+      );
+    }
+
+    logger.info(
+      `Starting smart contract prize distribution for topic: ${topicId}`
+    );
+
+    const operatorKey = PrivateKey.fromStringECDSA(HEDERA_OPERATOR_KEY_ECDSA);
+
+    // Handle contract address format (0x vs Hedera format)
+    let contractId: ContractId;
+    if (contractAddress.startsWith("0x")) {
+      // Convert Ethereum address to Hedera Contract ID format
+      contractId = ContractId.fromEvmAddress(0, 0, contractAddress); // TO DO: handle shard and realm properly
+    } else {
+      // Assume it's already in Hedera format
+      contractId = ContractId.fromString(contractAddress);
+    }
+
+    // Convert HBAR amounts to tinybars for smart contract
+    const amountsInTinybars = amounts.map((amount) =>
+      Hbar.from(amount, HbarUnit.Hbar).toTinybars()
+    );
+
+    // Prepare function parameters
+    const functionParams = new ContractFunctionParameters()
+      .addAddress(advertiserEvmAddress)
+      .addString(topicId)
+      .addAddressArray(participantEvmAddresses)
+      .addUint256Array(amountsInTinybars);
+
+    // Execute the contract call
+    const contractExecTx = new ContractExecuteTransaction()
+      .setContractId(contractId)
+      .setFunction("distributePrize", functionParams)
+      .setGas(MAX_GAS)
+      .freezeWith(client);
+
+    const contractSignedTx = await contractExecTx.sign(operatorKey);
+    const contractResponse = await contractSignedTx.execute(client);
+    const contractReceipt = await contractResponse.getReceipt(client);
+
+    const transactionId = contractResponse.transactionId.toString();
+
+    logger.info(
+      `Smart contract prize distribution completed. Status: ${contractReceipt.status.toString()}, Transaction ID: ${transactionId}`
+    );
+
+    return transactionId;
+  } catch (error: any) {
+    logger.error(
+      `Error executing smart contract prize distribution: ${error.message}`
+    );
+    return null;
+  }
 };
 
 // Create and export a singleton Hedera client

@@ -1,5 +1,9 @@
 import logger from "../common/common.instances";
-import { HEDERA_OPERATOR_ID_ECDSA, TWITTERAPI_API_KEY } from "../environment";
+import {
+  HEDERA_OPERATOR_ID_ECDSA,
+  TWITTERAPI_API_KEY,
+  HASHVERTISE_SMART_CONTRACT_ADDRESS,
+} from "../environment";
 import {
   TWITTER_API_BASE_URL,
   TWITTER_USER_INFO_ENDPOINT,
@@ -22,7 +26,9 @@ import {
   hederaClient,
   signMessage,
   submitMessageToTopic,
+  distributePrizeToParticipants,
 } from "../common/common.hedera";
+import { UserModel } from "../user/user.model";
 
 /**
  * Fetches the last tweets of a Twitter user
@@ -255,6 +261,64 @@ export const distributeReward = async (
         : "No valid applications found";
 
     logger.info(`Distribution results: ${resultString}`);
+
+    // Execute smart contract distribution if there are valid distributions
+    if (distributionEntries.length > 0) {
+      logger.info(`Starting smart contract distribution for topic: ${topicId}`);
+
+      // Get advertiser's EVM address (should already exist since validation was done prior campaign creation)
+      const advertiser = await UserModel.findOne({
+        accountId: campaign.accountId,
+      });
+      if (!advertiser || !advertiser.evmAddress) {
+        throw new Error(
+          `Advertiser not found or missing EVM address for account: ${campaign.accountId}`
+        );
+      }
+
+      // Get participant users with their EVM addresses (should already exist since validation was done prior every message submission)
+      const participantEvmAddresses: string[] = [];
+      const amounts: number[] = [];
+
+      for (const [accountId, reward] of distributionEntries) {
+        const participant = await UserModel.findOne({ accountId });
+
+        if (!participant || !participant.evmAddress) {
+          logger.error(
+            `Participant not found or missing EVM address for account ${accountId}`
+          );
+          continue;
+        }
+
+        participantEvmAddresses.push(participant.evmAddress);
+        amounts.push(reward);
+      }
+
+      if (participantEvmAddresses.length > 0) {
+        // Call the smart contract distribution function
+        const txId = await distributePrizeToParticipants(
+          hederaClient,
+          HASHVERTISE_SMART_CONTRACT_ADDRESS,
+          advertiser.evmAddress,
+          topicId,
+          participantEvmAddresses,
+          amounts
+        );
+
+        if (txId) {
+          logger.info(
+            `Smart contract prize distribution successful. Transaction ID: ${txId}`
+          );
+        } else {
+          logger.error(`Smart contract prize distribution failed`);
+          throw new Error("Smart contract prize distribution failed");
+        }
+      } else {
+        logger.warn(
+          `No valid participant addresses found for smart contract distribution`
+        );
+      }
+    }
 
     // Submit result of campaign as topic message
     const messageToSign = `Campaign over for topic ${topicId}. Final results by account ${HEDERA_OPERATOR_ID_ECDSA} are ${resultString}`;
