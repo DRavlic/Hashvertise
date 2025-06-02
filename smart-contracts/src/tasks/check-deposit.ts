@@ -54,7 +54,7 @@ async function checkDeposit(
     let contractId: ContractId;
     if (contract.startsWith("0x")) {
       // Convert Ethereum address to Hedera Contract ID format
-      contractId = ContractId.fromEvmAddress(0, 0, contract);
+      contractId = ContractId.fromEvmAddress(0, 0, contract); // TO DO: handle shard and realm properly
     } else {
       // Assume it's already in Hedera format
       contractId = ContractId.fromString(contract);
