@@ -255,6 +255,24 @@ export function CreateCampaign() {
         return;
       }
 
+      // Step 0: Validate user info
+      setCurrentStep(CreationStep.VALIDATING_USER);
+      const validateResponse = await fetch(API_ENDPOINTS.VALIDATE_USER, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          accountId,
+        }),
+      });
+
+      const validateData = await validateResponse.json();
+
+      if (!validateResponse.ok) {
+        throw new Error(validateData.error || "Failed to validate user info");
+      }
+
       // Step 1: Create a new topic
       setCurrentStep(CreationStep.CREATING_TOPIC);
       const topicResponse = await createTopic();
@@ -321,6 +339,8 @@ export function CreateCampaign() {
     if (!isSubmitting) return "Create Campaign";
 
     switch (currentStep) {
+      case CreationStep.VALIDATING_USER:
+        return "Getting User Info...";
       case CreationStep.CREATING_TOPIC:
         return "Creating Topic...";
       case CreationStep.SIGNING_DATA:

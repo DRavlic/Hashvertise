@@ -12,7 +12,12 @@ import {
 import { showError, showSuccess, getErrorMessage } from "../lib/toast";
 import { submitTopicMessage, getLedgerId } from "../lib/wallet";
 import { formatUtcDateTime, getCampaignStatusInfo } from "../lib/date";
-import { Campaign, TopicMessage, CampaignStatus } from "../lib/interfaces";
+import {
+  Campaign,
+  TopicMessage,
+  CampaignStatus,
+  SubmissionStep,
+} from "../lib/interfaces";
 import { StatusBadge } from "../components/StatusBadge";
 import { DateInfoBox } from "../components/DateInfoBox";
 import { getHashscanTopicUrl } from "../lib/url";
@@ -25,6 +30,9 @@ export function CampaignDetails() {
   const [XHandle, setXHandle] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionStep, setSubmissionStep] = useState<SubmissionStep>(
+    SubmissionStep.IDLE
+  );
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [showXHandleInput, setShowXHandleInput] = useState(false);
   const [campaignStatusInfo, setCampaignStatusInfo] = useState<ReturnType<
@@ -148,7 +156,27 @@ export function CampaignDetails() {
         return;
       }
 
-      // Submit topic message
+      // Step 0: Validate user info including X handle
+      setSubmissionStep(SubmissionStep.VALIDATING_USER);
+      const validateResponse = await fetch(API_ENDPOINTS.VALIDATE_USER, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          accountId,
+          xHandle: formattedXHandle,
+        }),
+      });
+
+      const validateData = await validateResponse.json();
+
+      if (!validateResponse.ok) {
+        throw new Error(validateData.error || "Failed to validate user info");
+      }
+
+      // Step 1: Submit topic message
+      setSubmissionStep(SubmissionStep.SUBMITTING_MESSAGE);
       const submitResult = await submitTopicMessage(
         `${accountId}, ${formattedXHandle}`,
         topicId
@@ -157,6 +185,7 @@ export function CampaignDetails() {
       if (!submitResult) {
         // If submitTopicMessage returns null, it already showed error messages
         setIsSubmitting(false);
+        setSubmissionStep(SubmissionStep.IDLE);
         return;
       }
 
@@ -174,6 +203,21 @@ export function CampaignDetails() {
       showError(`Error applying to campaign: ${getErrorMessage(error)}`);
     } finally {
       setIsSubmitting(false);
+      setSubmissionStep(SubmissionStep.IDLE);
+    }
+  };
+
+  // Function to get the appropriate button text based on the current step
+  const getButtonText = () => {
+    if (!isSubmitting) return "Apply Now";
+
+    switch (submissionStep) {
+      case SubmissionStep.VALIDATING_USER:
+        return "Getting User Info...";
+      case SubmissionStep.SUBMITTING_MESSAGE:
+        return "Submitting...";
+      default:
+        return "Processing...";
     }
   };
 
@@ -342,7 +386,7 @@ export function CampaignDetails() {
                     disabled={isSubmitting || !isPaired}
                     className="px-6 py-3 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 transition-colors disabled:bg-secondary-400 disabled:cursor-not-allowed"
                   >
-                    {isSubmitting ? "Submitting..." : "Apply Now"}
+                    {getButtonText()}
                   </button>
                 </form>
               )}

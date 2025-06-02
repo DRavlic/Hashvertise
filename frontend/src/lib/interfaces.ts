@@ -4,9 +4,16 @@
 
 export enum CreationStep {
   IDLE = "IDLE",
+  VALIDATING_USER = "VALIDATING_USER",
   CREATING_TOPIC = "CREATING_TOPIC",
   SIGNING_DATA = "SIGNING_DATA",
   CREATING_CAMPAIGN = "CREATING_CAMPAIGN",
+}
+
+export enum SubmissionStep {
+  IDLE = "IDLE",
+  VALIDATING_USER = "VALIDATING_USER",
+  SUBMITTING_MESSAGE = "SUBMITTING_MESSAGE",
 }
 
 export enum CampaignStatus {
