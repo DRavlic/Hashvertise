@@ -5,4 +5,4 @@ export const HEDERA_MAINNET_MIRROR_NODE_URL =
   "https://mainnet.mirrornode.hedera.com";
 
 // API endpoint paths
-export const HEDERA_MIRROR_ACCOUNT_ENDPOINT = "/api/v1/accounts/";
+export const HEDERA_MIRROR_ACCOUNT_ENDPOINT = "/api/v1/accounts";
