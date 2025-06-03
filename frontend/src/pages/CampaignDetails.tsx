@@ -8,6 +8,7 @@ import {
   MESSAGE_REFRESH_DELAY_MS,
   X_HANDLE_INPUT_DELAY_MS,
   COUNTDOWN_REFRESH_INTERVAL_MS,
+  CAMPAIGN_COMPLETION_MESSAGE_PREFIX,
 } from "../lib/constants";
 import { showError, showSuccess, getErrorMessage } from "../lib/toast";
 import { submitTopicMessage, getLedgerId } from "../lib/wallet";
@@ -144,8 +145,8 @@ export function CampaignDetails() {
       const normalizedXHandle = XHandle.replace(/^@/, "");
       const formattedXHandle = `@${normalizedXHandle}`;
 
-      // Check if this X handle already exists in messages we got from the backend
-      const alreadyApplied = messages.some((msg) => {
+      // Check if this X handle already exists in applicant messages
+      const alreadyApplied = applicantMessages.some((msg) => {
         const [, handle] = msg.message.split(", ");
         return handle?.toLowerCase() === formattedXHandle.toLowerCase();
       });
@@ -223,6 +224,11 @@ export function CampaignDetails() {
 
   // Check if user should be able to apply (only for active campaigns)
   const canApply = campaignStatusInfo?.status === CampaignStatus.ACTIVE;
+
+  // Filter out campaign completion messages to show only applicants
+  const applicantMessages = messages.filter(
+    (message) => !message.message.includes(CAMPAIGN_COMPLETION_MESSAGE_PREFIX)
+  );
 
   if (isLoading) {
     return (
@@ -400,17 +406,17 @@ export function CampaignDetails() {
             <h2 className="text-lg font-semibold text-secondary-800 mb-4 flex justify-between items-center">
               <span>Applicants</span>
               <span className="text-secondary-500 text-sm font-normal">
-                {messages.length} Total
+                {applicantMessages.length} Total
               </span>
             </h2>
 
-            {messages.length === 0 ? (
+            {applicantMessages.length === 0 ? (
               <p className="text-secondary-500 text-center py-4">
                 No applicants yet. Be the first!
               </p>
             ) : (
               <ul className="divide-y divide-secondary-200">
-                {messages.map((message) => (
+                {applicantMessages.map((message) => (
                   <li key={message._id} className="py-3">
                     <div className="font-medium text-secondary-800">
                       {message.message}

@@ -21,6 +21,9 @@ export const START_TO_END_TIME_DIFF_MINUTES = 1;
 export const MAX_CAMPAIGN_NAME_LENGTH = 40;
 export const MAX_REQUIREMENT_LENGTH = 2000;
 
+// Campaign completion message constant (must match backend)
+export const CAMPAIGN_COMPLETION_MESSAGE_PREFIX = "Campaign over for topic";
+
 // Hashscan URLs
 export const HASHSCAN_URLS = {
   MAINNET: "https://hashscan.io/mainnet",
