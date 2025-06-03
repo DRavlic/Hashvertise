@@ -29,6 +29,7 @@ import {
   distributePrizeToParticipants,
 } from "../common/common.hedera";
 import { UserModel } from "../user/user.model";
+import { CAMPAIGN_COMPLETION_MESSAGE_PREFIX } from "../common/common.constants";
 
 /**
  * Fetches the last tweets of a Twitter user
@@ -321,7 +322,7 @@ export const distributeReward = async (
     }
 
     // Submit result of campaign as topic message
-    const messageToSign = `Campaign over for topic ${topicId}. Final results by account ${HEDERA_OPERATOR_ID_ECDSA} are ${resultString}`;
+    const messageToSign = `${CAMPAIGN_COMPLETION_MESSAGE_PREFIX} ${topicId}. Final results by account ${HEDERA_OPERATOR_ID_ECDSA} are ${resultString}`;
     const signature = signMessage(messageToSign);
     if (!signature) {
       throw new Error("Failed to sign message");

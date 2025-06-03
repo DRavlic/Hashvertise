@@ -23,6 +23,7 @@ import { setupTopicListener, verifySignature } from "../common/common.hedera";
 import { createUtcDate } from "../common/common.dates";
 import { UserXModel } from "../x/x.model";
 import { UserModel } from "../user/user.model";
+import { CAMPAIGN_COMPLETION_MESSAGE_PREFIX } from "../common/common.constants";
 
 // Store active subscriptions in memory
 // Note: this will be lost on server restart but we'll recover them from the database
@@ -75,7 +76,7 @@ const handleTopicMessage = async (
 
     // If the message is not in the correct format, check if it's a campaign over message
     if (!parsedMessage) {
-      if (message.includes("Campaign over for topic")) {
+      if (message.includes(CAMPAIGN_COMPLETION_MESSAGE_PREFIX)) {
         const [campaignMessage, signaturePart] = message.split("|");
         const isValid = verifySignature(campaignMessage, signaturePart);
         if (isValid) {
