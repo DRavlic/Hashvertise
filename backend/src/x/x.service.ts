@@ -327,7 +327,7 @@ export const distributeReward = async (
       throw new Error("Failed to sign message");
     }
 
-    const messageToSubmit = `${messageToSign}:${signature}`;
+    const messageToSubmit = `${messageToSign}|${signature}`;
     await submitMessageToTopic(
       hederaClient,
       messageToSubmit,

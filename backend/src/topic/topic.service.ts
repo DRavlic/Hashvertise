@@ -76,7 +76,7 @@ const handleTopicMessage = async (
     // If the message is not in the correct format, check if it's a campaign over message
     if (!parsedMessage) {
       if (message.includes("Campaign over for topic")) {
-        const [campaignMessage, signaturePart] = message.split(":");
+        const [campaignMessage, signaturePart] = message.split("|");
         const isValid = verifySignature(campaignMessage, signaturePart);
         if (isValid) {
           await deactivateTopicListener(topicId);
