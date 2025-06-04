@@ -63,7 +63,7 @@ export class Campaign {
   public accountId!: string;
 
   @prop({ required: true })
-  public prizePool!: number;
+  public prizePool!: number; // TO DO: change to BigNumber? Change name to prizePoolHbar?
 
   @prop({ required: true })
   public requirement!: string;

@@ -12,6 +12,7 @@ import {
   countCampaigns,
   listCampaigns,
   getCampaignByTopicId,
+  verifyAdvertiserDeposit,
 } from "./topic.service";
 import logger from "../common/common.instances";
 import {
@@ -173,7 +174,7 @@ export const verifyCampaignAndCreate = async (
       });
     }
 
-    // Parse the campaign data from the message
+    // Parse the campaign data from the message advertiser sent from frontend
     const campaignData = parseCampaignMessage(message);
     if (!campaignData) {
       return res.status(StatusCodes.BAD_REQUEST).json({
@@ -184,20 +185,20 @@ export const verifyCampaignAndCreate = async (
 
     // Get the public key for the advertiser (should already exist since validation was done)
     const user = await UserModel.findOne({ accountId: campaignData.accountId });
-    if (!user || !user.publicKey) {
+    if (!user || !user.publicKey || !user.evmAddress) {
       return res.status(StatusCodes.NOT_FOUND).json({
         success: false,
-        error: "User not found. Please validate user info first.",
+        error:
+          "User not found, missing public key or EVM address. Please validate user info first.",
       });
     }
 
-    // Verify the signature
+    // Verify if actual advertiser signed the message
     const isValidSignature = await verifySignatureFromHashConnect(
       message,
       signature,
       user.publicKey
     );
-
     if (!isValidSignature) {
       return res.status(StatusCodes.UNAUTHORIZED).json({
         success: false,
@@ -212,7 +213,6 @@ export const verifyCampaignAndCreate = async (
       campaignData.topicId,
       hederaClient
     );
-
     if (!topicExists) {
       return res.status(StatusCodes.NOT_FOUND).json({
         success: false,
@@ -220,7 +220,22 @@ export const verifyCampaignAndCreate = async (
       });
     }
 
-    // Create the campaign
+    // Verify if advertiser has deposited enough funds into the smart contract
+    const depositVerified = await verifyAdvertiserDeposit(
+      hederaClient,
+      user.evmAddress,
+      campaignData.topicId,
+      campaignData.prizePool
+    );
+    if (!depositVerified) {
+      return res.status(StatusCodes.EXPECTATION_FAILED).json({
+        success: false,
+        error:
+          "Advertiser deposit not found in smart contract or insufficient for the stated prize pool.",
+      });
+    }
+
+    // If all above checks pass, create the campaign
     const createResult = await createCampaign(campaignData);
     if (!createResult.success) {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -235,12 +250,12 @@ export const verifyCampaignAndCreate = async (
       campaignData.topicId,
       hederaClient
     );
-
     if (!listenerResult.success) {
-      logger.error(
-        `Failed to set up listener for campaign: ${listenerResult.error}`
-      );
-      throw new Error(listenerResult.error);
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        error: "Failed to set up topic listener",
+        details: listenerResult.error,
+      });
     }
 
     return res.status(StatusCodes.CREATED).json({

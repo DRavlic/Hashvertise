@@ -19,11 +19,20 @@ import {
   ParsedCampaignData,
   ParsedTopicMessageData,
 } from "./topic.interfaces";
-import { setupTopicListener, verifySignature } from "../common/common.hedera";
+import {
+  setupTopicListener,
+  verifySignature,
+  getContractDepositAmount,
+} from "../common/common.hedera";
 import { createUtcDate } from "../common/common.dates";
 import { UserXModel } from "../x/x.model";
 import { UserModel } from "../user/user.model";
-import { CAMPAIGN_COMPLETION_MESSAGE_PREFIX } from "../common/common.constants";
+import {
+  CAMPAIGN_COMPLETION_MESSAGE_PREFIX,
+  TINYBARS_PER_HBAR,
+} from "../common/common.constants";
+import { HASHVERTISE_SMART_CONTRACT_ADDRESS } from "../environment";
+import BigNumber from "bignumber.js";
 
 // Store active subscriptions in memory
 // Note: this will be lost on server restart but we'll recover them from the database
@@ -502,6 +511,55 @@ export const verifyTopicExists = async (
     return !!topicInfo.topicId;
   } catch (error) {
     logger.error(`Error verifying topic exists: ${error}`);
+    return false;
+  }
+};
+
+/**
+ * Verify that the advertiser has deposited enough funds into the smart contract.
+ *
+ * @param {Client} hederaClient - Hedera client instance.
+ * @param {string} advertiserEvmAddress - The EVM address of the advertiser.
+ * @param {string} topicId - The topic ID of the campaign.
+ * @param {number} expectedPrizePoolInHbar - The prize pool amount in HBAR expected to be deposited.
+ * @returns {Promise<boolean>} True if the deposit is sufficient, false otherwise.
+ */
+export const verifyAdvertiserDeposit = async (
+  hederaClient: Client,
+  advertiserEvmAddress: string,
+  topicId: string,
+  expectedPrizePoolInHbar: number
+): Promise<boolean> => {
+  try {
+    if (!HASHVERTISE_SMART_CONTRACT_ADDRESS) {
+      logger.error("Smart contract address is not configured.");
+      return false;
+    }
+
+    // Get the advertiser's deposit amount in tinybars for this campaign from smart contract
+    const depositAmountInTinybarsBigNum = await getContractDepositAmount(
+      hederaClient,
+      HASHVERTISE_SMART_CONTRACT_ADDRESS,
+      advertiserEvmAddress,
+      topicId
+    );
+    if (depositAmountInTinybarsBigNum === null) {
+      logger.error(
+        `Failed to retrieve deposit amount from contract for topic ${topicId}, advertiser ${advertiserEvmAddress}.`
+      );
+      return false;
+    }
+
+    const expectedPrizePoolInTinybarsBigNum = new BigNumber(
+      expectedPrizePoolInHbar
+    ).multipliedBy(TINYBARS_PER_HBAR);
+
+    // Check if actual deposit is greater than or equal to expected
+    return depositAmountInTinybarsBigNum.gte(expectedPrizePoolInTinybarsBigNum);
+  } catch (error: any) {
+    logger.error(
+      `Error verifying advertiser deposit for topic ${topicId}: ${error.message}`
+    );
     return false;
   }
 };

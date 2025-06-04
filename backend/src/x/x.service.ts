@@ -30,6 +30,7 @@ import {
 } from "../common/common.hedera";
 import { UserModel } from "../user/user.model";
 import { CAMPAIGN_COMPLETION_MESSAGE_PREFIX } from "../common/common.constants";
+import BigNumber from "bignumber.js";
 
 /**
  * Fetches the last tweets of a Twitter user
@@ -243,12 +244,21 @@ export const distributeReward = async (
       0
     );
 
-    // Calculate proportional distribution
-    const distributions = new Map<string, number>();
+    // Calculate proportional distribution (use BigNumber to avoid floating point precision issues)
+    const distributions = new Map<string, BigNumber>();
     if (totalScore > 0) {
+      const campaignPrizePoolHbarBigNum = new BigNumber(campaign.prizePool);
+      const totalScoreBigNum = new BigNumber(totalScore);
+
       for (const [accountId, score] of accountScores) {
-        const proportionalReward = (score / totalScore) * campaign.prizePool;
-        distributions.set(accountId, proportionalReward);
+        if (score > 0) {
+          const scoreBigNum = new BigNumber(score);
+          const proportionalRewardHbarBigNum = scoreBigNum
+            .dividedBy(totalScoreBigNum)
+            .multipliedBy(campaignPrizePoolHbarBigNum);
+
+          distributions.set(accountId, proportionalRewardHbarBigNum);
+        }
       }
     }
 
@@ -257,7 +267,10 @@ export const distributeReward = async (
     const resultString =
       distributionEntries.length > 0
         ? distributionEntries
-            .map(([accountId, reward]) => `${accountId}:${reward}`)
+            .map(
+              ([accountId, rewardBigNum]) =>
+                `${accountId}:${rewardBigNum.toFixed()}`
+            )
             .join(";")
         : "No valid applications found";
 
@@ -279,9 +292,9 @@ export const distributeReward = async (
 
       // Get participant users with their EVM addresses (should already exist since validation was done prior every message submission)
       const participantEvmAddresses: string[] = [];
-      const amounts: number[] = [];
+      const amountsHbarBigNum: BigNumber[] = [];
 
-      for (const [accountId, reward] of distributionEntries) {
+      for (const [accountId, rewardHbarBigNum] of distributionEntries) {
         const participant = await UserModel.findOne({ accountId });
 
         if (!participant || !participant.evmAddress) {
@@ -292,18 +305,17 @@ export const distributeReward = async (
         }
 
         participantEvmAddresses.push(participant.evmAddress);
-        amounts.push(reward);
+        amountsHbarBigNum.push(rewardHbarBigNum);
       }
 
       if (participantEvmAddresses.length > 0) {
-        // Call the smart contract distribution function
         const txId = await distributePrizeToParticipants(
           hederaClient,
           HASHVERTISE_SMART_CONTRACT_ADDRESS,
           advertiser.evmAddress,
           topicId,
           participantEvmAddresses,
-          amounts
+          amountsHbarBigNum
         );
 
         if (txId) {

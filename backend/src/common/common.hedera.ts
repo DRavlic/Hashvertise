@@ -12,6 +12,9 @@ import {
   ContractExecuteTransaction,
   ContractFunctionParameters,
   ContractId,
+  ContractCallQuery,
+  Hbar,
+  HbarUnit,
 } from "@hashgraph/sdk";
 import logger from "./common.instances";
 import {
@@ -26,6 +29,7 @@ import {
   TINYBARS_PER_HBAR,
   CHUNK_SIZE,
 } from "./common.constants";
+import BigNumber from "bignumber.js";
 
 /**
  * Submit a message to a Hedera consensus topic
@@ -321,7 +325,7 @@ export const initializeHederaClient = (): Client => {
  * @param {string} advertiserEvmAddress - The advertiser's EVM address
  * @param {string} topicId - The topic ID
  * @param {string[]} participantEvmAddresses - Array of participant EVM addresses
- * @param {number[]} amounts - Array of amounts in HBAR
+ * @param {BigNumber[]} amountsHbarBigNum - Array of amounts in HBAR as BigNumber
  * @returns {Promise<{success: boolean, transactionId?: string, error?: string}>} Distribution result
  */
 export const distributePrizeToParticipants = async (
@@ -330,7 +334,7 @@ export const distributePrizeToParticipants = async (
   advertiserEvmAddress: string,
   topicId: string,
   participantEvmAddresses: string[],
-  amounts: number[]
+  amountsHbarBigNum: BigNumber[]
 ): Promise<string | null> => {
   try {
     if (!HEDERA_OPERATOR_KEY_ECDSA) {
@@ -355,9 +359,11 @@ export const distributePrizeToParticipants = async (
       contractId = ContractId.fromString(contractAddress);
     }
 
-    // Convert HBAR amounts to tinybars for smart contract
-    const amountsInTinybars = amounts.map((amount) =>
-      Math.floor(amount * TINYBARS_PER_HBAR)
+    // Convert HBAR BigNumber amounts to tinybars BigNumber amounts for smart contract
+    const amountsInTinybarsBigNum = amountsHbarBigNum.map((hbarAmountBigNum) =>
+      hbarAmountBigNum
+        .multipliedBy(TINYBARS_PER_HBAR)
+        .integerValue(BigNumber.ROUND_FLOOR)
     );
 
     // Prepare function parameters
@@ -365,7 +371,7 @@ export const distributePrizeToParticipants = async (
       .addAddress(advertiserEvmAddress)
       .addString(topicId)
       .addAddressArray(participantEvmAddresses)
-      .addUint256Array(amountsInTinybars);
+      .addUint256Array(amountsInTinybarsBigNum);
 
     // Execute the contract call
     const contractExecTx = new ContractExecuteTransaction()
@@ -405,3 +411,48 @@ try {
 }
 
 export { hederaClient };
+
+/**
+ * Queries the smart contract to get the deposited amount for a specific payer and topic.
+ *
+ * @param {Client} client - Hedera client instance.
+ * @param {string} contractAddress - The smart contract address (Hedera format or 0x format).
+ * @param {string} payerEvmAddress - The EVM address of the payer (advertiser).
+ * @param {string} topicId - The topic ID for the campaign.
+ * @returns {Promise<BigNumber | null>} The deposited amount in tinybars as a BigNumber, or null if an error occurs.
+ */
+export const getContractDepositAmount = async (
+  client: Client,
+  contractAddress: string,
+  payerEvmAddress: string,
+  topicId: string
+): Promise<BigNumber | null> => {
+  try {
+    let contractId: ContractId;
+    if (contractAddress.startsWith("0x")) {
+      contractId = ContractId.fromEvmAddress(0, 0, contractAddress); // TO DO: handle shard and realm properly
+    } else {
+      contractId = ContractId.fromString(contractAddress);
+    }
+
+    const contractQuery = new ContractCallQuery()
+      .setContractId(contractId)
+      .setGas(MAX_GAS)
+      .setFunction(
+        "getDeposit",
+        new ContractFunctionParameters()
+          .addAddress(payerEvmAddress)
+          .addString(topicId)
+      );
+
+    const result = await contractQuery.execute(client);
+    const depositAmountInTinybarsBigNum = result.getUint256(0);
+
+    return depositAmountInTinybarsBigNum;
+  } catch (error: any) {
+    logger.error(
+      `Error querying contract deposit for payer ${payerEvmAddress}, topic ${topicId}: ${error.message}`
+    );
+    return null;
+  }
+};
