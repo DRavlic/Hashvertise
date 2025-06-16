@@ -118,7 +118,7 @@ const handleTopicMessage = async (
       return;
     }
 
-    // Check if this X handle actually exists in our database (and thus on X)
+    // Check if this X handle is valid and actually exists in our database (which should have happened before user submitted message to topic)
     const userX = await UserXModel.findOne({ userName: parsedMessage.XHandle });
     if (!userX) {
       logger.info(
@@ -140,13 +140,10 @@ const handleTopicMessage = async (
       return;
     }
 
-    // Ensure the timestamp is in UTC format
-    const utcTimestamp = createUtcDate(hederaTimestamp);
-
     await TopicMessageModel.create({
       topicId,
       message,
-      consensusTimestamp: utcTimestamp,
+      consensusTimestamp: hederaTimestamp, // No additional conversion needed since Hedera consensus timestamps are in UTC
     });
     logger.info(`Saved new message for topic ${topicId}`);
   } catch (error: any) {
