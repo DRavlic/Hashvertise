@@ -19,5 +19,4 @@ export const API_ENDPOINTS = {
   GET_CAMPAIGN: (topicId: string) => `${API_URL}/topic/campaign/${topicId}`,
   GET_TOPIC_MESSAGES: (topicId: string) =>
     `${API_URL}/topic/messages/${topicId}`,
-  VERIFY_TOPIC_MESSAGE: `${API_URL}/topic/message/verify`,
 };

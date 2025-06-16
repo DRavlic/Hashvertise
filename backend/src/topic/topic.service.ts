@@ -89,7 +89,7 @@ const handleTopicMessage = async (
         const [campaignMessage, signaturePart] = message.split("|");
         const isValid = verifySignature(campaignMessage, signaturePart);
         if (isValid) {
-          await deactivateTopicListener(topicId);
+          await deactivateTopicListener(topicId); // TODO: check if we need to handle an error from this function
 
           logger.info(
             `Campaign finished: deactivating topic listener for topic ${topicId}`
@@ -378,9 +378,7 @@ export const getTopicMessages = async (
  * @returns {Promise<void>}
  * @throws {Error} If deactivation fails
  */
-export const deactivateTopicListener = async (
-  topicId: string
-): Promise<void> => {
+const deactivateTopicListener = async (topicId: string): Promise<void> => {
   try {
     // Update database record first
     await TopicListenerModel.findOneAndUpdate({ topicId }, { isActive: false });

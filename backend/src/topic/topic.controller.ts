@@ -4,7 +4,6 @@ import {
   setupHederaTopicListener as setupHederaTopicListenerService,
   getTopicStatus,
   getTopicMessages as getTopicMessagesService,
-  deactivateTopicListener as deactivateTopicListenerService,
   parseCampaignMessage,
   verifySignatureFromHashConnect,
   verifyTopicExists,
@@ -114,36 +113,6 @@ export const getTopicMessages = async (
     });
   } catch (error: any) {
     logger.error("Error in getTopicMessages controller:", error);
-
-    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      error: "Internal server error",
-      details: error.message || String(error),
-    });
-  }
-};
-
-/**
- * Deactivate a topic listener
- *
- * @param {Request} req - Express request object containing topicId in params
- * @param {Response} res - Express response object
- * @returns {Promise<Response>} HTTP response with deactivation result
- */
-export const deactivateTopicListener = async (
-  req: Request,
-  res: Response
-): Promise<Response> => {
-  try {
-    const { topicId } = req.params;
-
-    await deactivateTopicListenerService(topicId);
-
-    return res.status(StatusCodes.OK).json({
-      success: true,
-      message: `Topic listener for ${topicId} has been deactivated`,
-    });
-  } catch (error: any) {
-    logger.error("Error in deactivateTopicListener controller:", error);
 
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       error: "Internal server error",

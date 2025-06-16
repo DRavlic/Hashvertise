@@ -44,15 +44,6 @@ export const topicMessagesSchema = z.object({
     .optional(),
 });
 
-// Schema for deactivating a topic listener
-export const topicDeactivateSchema = z.object({
-  params: z.object({
-    topicId: z.string({
-      required_error: "Topic ID is required",
-    }),
-  }),
-});
-
 // Schema for campaign verification
 export const campaignVerifySchema = z.object({
   body: z.object({

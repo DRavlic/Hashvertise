@@ -3,7 +3,6 @@ import {
   setupHederaTopicListener,
   checkTopicStatus,
   getTopicMessages,
-  deactivateTopicListener,
   verifyCampaignAndCreate,
   getCampaigns,
   getCampaign,
@@ -13,7 +12,6 @@ import {
   topicListenSchema,
   topicStatusSchema,
   topicMessagesSchema,
-  topicDeactivateSchema,
   campaignVerifySchema,
   campaignsListSchema,
   campaignGetSchema,
@@ -52,17 +50,6 @@ router.get(
   "/messages/:topicId",
   validateRequest(topicMessagesSchema),
   getTopicMessages
-);
-
-/**
- * @route POST /api/topic/deactivate/:topicId
- * @description Deactivate a topic listener
- * @access Public
- */
-router.post(
-  "/deactivate/:topicId",
-  validateRequest(topicDeactivateSchema),
-  deactivateTopicListener
 );
 
 /**
