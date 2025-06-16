@@ -45,7 +45,7 @@ export interface Author {
   name: string;
   isBlueVerified: boolean;
   profilePicture: string;
-  // TO DO: see if you need to add more fields
+  // TODO: see if you need to add more fields
 }
 
 export interface Entities {

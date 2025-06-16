@@ -150,7 +150,7 @@ const handleTopicMessage = async (
     });
     logger.info(`Saved new message for topic ${topicId}`);
   } catch (error: any) {
-    // TO DO: see if this and other similar error logs are necessary
+    // TODO: see if this and other similar error logs are necessary
     logger.error(
       `Error saving new message for topic ${topicId}: ${error.message}`
     );

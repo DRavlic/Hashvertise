@@ -25,9 +25,9 @@ contract Hashvertise is IHashvertise {
      * @param topicId The topic ID (campaign identifier) as a string.
      */
     function deposit(address payer, string memory topicId) external payable {
-        require(msg.value > 0, "Must send a positive amount"); // TO DO: Add proper minimum deposit amount after DApp cost analysis
+        require(msg.value > 0, "Must send a positive amount"); // TODO: Add proper minimum deposit amount after DApp cost analysis
 
-        // TO DO: Deduct fee from the deposit amount after DApp cost analysis, ensure payer paid proper fee
+        // TODO: Deduct fee from the deposit amount after DApp cost analysis, ensure payer paid proper fee
         deposits[payer][topicId] += msg.value;
         emit Deposited(payer, topicId, msg.value);
     }

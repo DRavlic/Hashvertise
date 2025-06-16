@@ -13,8 +13,6 @@ import {
   ContractFunctionParameters,
   ContractId,
   ContractCallQuery,
-  Hbar,
-  HbarUnit,
 } from "@hashgraph/sdk";
 import logger from "./common.instances";
 import {
@@ -353,7 +351,7 @@ export const distributePrizeToParticipants = async (
     let contractId: ContractId;
     if (contractAddress.startsWith("0x")) {
       // Convert Ethereum address to Hedera Contract ID format
-      contractId = ContractId.fromEvmAddress(0, 0, contractAddress); // TO DO: handle shard and realm properly
+      contractId = ContractId.fromEvmAddress(0, 0, contractAddress); // TODO: handle shard and realm properly
     } else {
       // Assume it's already in Hedera format
       contractId = ContractId.fromString(contractAddress);
@@ -430,7 +428,7 @@ export const getContractDepositAmount = async (
   try {
     let contractId: ContractId;
     if (contractAddress.startsWith("0x")) {
-      contractId = ContractId.fromEvmAddress(0, 0, contractAddress); // TO DO: handle shard and realm properly
+      contractId = ContractId.fromEvmAddress(0, 0, contractAddress); // TODO: handle shard and realm properly
     } else {
       contractId = ContractId.fromString(contractAddress);
     }

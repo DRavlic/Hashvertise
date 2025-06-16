@@ -83,7 +83,7 @@ async function distributePrize(
     let contractId: ContractId;
     if (contract.startsWith("0x")) {
       // Convert Ethereum address to Hedera Contract ID format
-      contractId = ContractId.fromEvmAddress(0, 0, contract); // TO DO: handle shard and realm properly
+      contractId = ContractId.fromEvmAddress(0, 0, contract); // TODO: handle shard and realm properly
     } else {
       // Assume it's already in Hedera format
       contractId = ContractId.fromString(contract);

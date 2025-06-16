@@ -34,7 +34,7 @@ export async function initializeHashConnect() {
   try {
     if (!hashconnect) {
       hashconnect = new HashConnect(
-        LedgerId.TESTNET, // TO DO: change to proper environment variable
+        LedgerId.TESTNET, // TODO: change to proper environment variable
         WALLET_CONNECT_PROJECT_ID,
         {
           name: APP_METADATA.name,
@@ -42,7 +42,7 @@ export async function initializeHashConnect() {
           icons: APP_METADATA.icons,
           url: window.location.origin,
         },
-        true // TO DO: change to false in production
+        true // TODO: change to false in production
       );
 
       hashconnect.pairingEvent.on((newPairing) => {
@@ -286,7 +286,7 @@ export async function depositToContract(
         0,
         0,
         HASHVERTISE_SMART_CONTRACT_ADDRESS
-      ); // TO DO: handle shard and realm properly
+      ); // TODO: handle shard and realm properly
     } else {
       // Assume it's already in Hedera format
       contractId = ContractId.fromString(HASHVERTISE_SMART_CONTRACT_ADDRESS);

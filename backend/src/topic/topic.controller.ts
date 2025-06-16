@@ -206,7 +206,7 @@ export const verifyCampaignAndCreate = async (
       });
     }
 
-    // TO DO: check if we need to wait little bit for mirror node to sync with hedera network before verifying the topic exists
+    // TODO: check if we need to wait little bit for mirror node to sync with hedera network before verifying the topic exists
 
     // Verify the topic exists on Hedera
     const topicExists = await verifyTopicExists(
