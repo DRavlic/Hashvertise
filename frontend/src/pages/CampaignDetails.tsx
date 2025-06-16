@@ -36,11 +36,44 @@ export function CampaignDetails() {
   );
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [showXHandleInput, setShowXHandleInput] = useState(false);
+  const [xHandleError, setXHandleError] = useState<string>("");
   const [campaignStatusInfo, setCampaignStatusInfo] = useState<ReturnType<
     typeof getCampaignStatusInfo
   > | null>(null);
 
   const isPaired = connectionStatus === HashConnectConnectionState.Paired;
+
+  // Validate X handle format
+  const validateXHandle = (handle: string): string => {
+    if (!handle.trim()) {
+      return "";
+    }
+
+    // Remove @ if present for validation
+    const cleanHandle = handle.replace(/^@/, "");
+
+    // Check allowed characters (letters, numbers, underscore only)
+    const validFormat = /^[A-Za-z0-9_]+$/;
+    if (!validFormat.test(cleanHandle)) {
+      return "X handle can only contain letters, numbers, and underscores";
+    }
+
+    // Check that it's not all numbers
+    const allNumbers = /^[0-9_]+$/;
+    if (allNumbers.test(cleanHandle)) {
+      return "X handle must contain at least one letter";
+    }
+
+    // Check length (4-15 characters)
+    if (cleanHandle.length < 4) {
+      return "X handle must be at least 4 characters long";
+    }
+    if (cleanHandle.length > 15) {
+      return "X handle cannot be longer than 15 characters";
+    }
+
+    return "";
+  };
 
   // Update campaign status periodically
   useEffect(() => {
@@ -145,6 +178,14 @@ export function CampaignDetails() {
       const normalizedXHandle = XHandle.replace(/^@/, "");
       const formattedXHandle = `@${normalizedXHandle}`;
 
+      // Validate X handle format
+      const validationError = validateXHandle(normalizedXHandle);
+      if (validationError) {
+        showError(validationError);
+        setIsSubmitting(false);
+        return;
+      }
+
       // Check if this X handle already exists in applicant messages
       const alreadyApplied = applicantMessages.some((msg) => {
         const [, handle] = msg.message.split(", ");
@@ -157,7 +198,7 @@ export function CampaignDetails() {
         return;
       }
 
-      // Step 0: Validate user info including X handle
+      // Step 0: Validate and save user info including X handle - to prevent users from submitting message to topic with invalid X handles
       setSubmissionStep(SubmissionStep.VALIDATING_USER);
       const validateResponse = await fetch(API_ENDPOINTS.VALIDATE_USER, {
         method: "POST",
@@ -190,9 +231,7 @@ export function CampaignDetails() {
         return;
       }
 
-      showSuccess(
-        "Successfully applied to the campaign if you provided CORRECT X handle!"
-      );
+      showSuccess("Successfully applied to the campaign!");
       setXHandle("");
 
       // Refresh messages list after MESSAGE_REFRESH_DELAY_MS seconds to give backend time to process the message
@@ -374,14 +413,23 @@ export function CampaignDetails() {
                         type="text"
                         id="XHandle"
                         value={XHandle}
-                        onChange={(e) =>
-                          setXHandle(e.target.value.replace(/^@/, ""))
-                        }
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/^@/, "");
+                          setXHandle(value);
+                          // Validate on change and set error state
+                          const error = validateXHandle(value);
+                          setXHandleError(error);
+                        }}
                         required
                         className="w-full pl-8 pr-4 py-2 border border-secondary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                         placeholder="yourxhandle"
                       />
                     </div>
+                    {xHandleError && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {xHandleError}
+                      </p>
+                    )}
                     <p className="mt-1 text-sm text-secondary-500">
                       Note: This will be publicly visible on the Hedera network
                     </p>
