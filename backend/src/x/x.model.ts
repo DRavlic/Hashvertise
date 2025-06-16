@@ -22,7 +22,7 @@ export class UserX {
   public userName!: string;
 
   @prop({ default: true })
-  public createdOnX!: Date;
+  public createdOnXUtc!: Date;
 }
 
 export const UserXModel = getModelForClass(UserX);

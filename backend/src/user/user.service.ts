@@ -84,7 +84,9 @@ export const validateUserInfo = async (
           userX = await UserXModel.create({
             xId: userInfo.userInfo!.id,
             userName: xHandle,
-            createdOnX: createUtcDate(),
+            createdOnXUtc: createUtcDate(
+              new Date(userInfo.userInfo!.createdAt)
+            ),
           });
 
           logger.info(`Created new UserX record for: ${xHandle}`);
