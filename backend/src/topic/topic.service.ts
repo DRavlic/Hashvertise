@@ -178,7 +178,7 @@ export const initializeTopicListeners = async (
     // Get only topic IDs of campaigns that haven't ended yet
     const currentDate = createUtcDate();
     const activeCampaignResults = await CampaignModel.find(
-      { endDate: { $gte: currentDate } },
+      { endDateUtc: { $gte: currentDate } },
       { topicId: 1, _id: 0 }
     ).lean();
 
@@ -405,7 +405,7 @@ export const deactivateTopicListener = async (
 };
 
 /**
- * Parse campaign data from a message
+ * Parse campaign data from a message and verify dates are valid
  *
  * @param {string} message - The message content to parse
  * @returns {ParsedCampaignData | null} Parsed campaign data or null if parsing fails
@@ -422,8 +422,8 @@ export const parseCampaignMessage = (
       accountId,
       prizePoolStr,
       requirement,
-      startDate,
-      endDate,
+      startDateStr,
+      endDateStr,
     ] = message.split(", ");
 
     // Convert prize pool to number
@@ -437,9 +437,35 @@ export const parseCampaignMessage = (
       !accountId ||
       isNaN(prizePool) ||
       !requirement ||
-      !startDate ||
-      !endDate
+      !startDateStr ||
+      !endDateStr
     ) {
+      logger.error("Not all required fields are present in campaign message");
+      return null;
+    }
+
+    // Check if dates are valid
+    const startDateUtc = createUtcDate(new Date(startDateStr));
+    const endDateUtc = createUtcDate(new Date(endDateStr));
+
+    if (isNaN(startDateUtc.getTime()) || isNaN(endDateUtc.getTime())) {
+      logger.error(
+        `Invalid start date: ${startDateStr} or end date: ${endDateStr} format for campaign`
+      );
+      return null;
+    }
+
+    if (startDateUtc >= endDateUtc) {
+      logger.error(
+        `Start date: ${startDateStr} must be before end date: ${endDateStr} for campaign`
+      );
+      return null;
+    }
+
+    if (startDateUtc < createUtcDate()) {
+      logger.error(
+        `Start date: ${startDateStr} cannot be in the past for campaign`
+      );
       return null;
     }
 
@@ -450,8 +476,8 @@ export const parseCampaignMessage = (
       accountId,
       prizePool,
       requirement,
-      startDate,
-      endDate,
+      startDateUtc,
+      endDateUtc,
     };
   } catch (error) {
     logger.error(`Error parsing campaign message: ${error}`);
@@ -579,8 +605,8 @@ export const createCampaign = async (
       prizePool: campaignData.prizePool,
       requirement: campaignData.requirement,
       txId: campaignData.txId,
-      startDate: createUtcDate(new Date(campaignData.startDate)),
-      endDate: createUtcDate(new Date(campaignData.endDate)),
+      startDateUtc: campaignData.startDateUtc,
+      endDateUtc: campaignData.endDateUtc,
     });
 
     return {

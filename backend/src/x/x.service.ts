@@ -179,7 +179,7 @@ export const distributeReward = async (
     // Process each message until endDate of campaign
     for (const message of messages) {
       // Stop processing when message timestamp is greater than campaign endDate
-      if (message.consensusTimestamp > campaign.endDate) {
+      if (message.consensusTimestamp > campaign.endDateUtc) {
         break;
       }
 
@@ -216,8 +216,8 @@ export const distributeReward = async (
 
         // Check if tweet was created within campaign period
         const tweetCreatedAt = new Date(tweet.createdAt);
-        const isAfterStartDate = tweetCreatedAt >= campaign.startDate;
-        const isBeforeEndDate = tweetCreatedAt <= campaign.endDate;
+        const isAfterStartDate = tweetCreatedAt >= campaign.startDateUtc;
+        const isBeforeEndDate = tweetCreatedAt <= campaign.endDateUtc;
 
         return containsRequirement && isAfterStartDate && isBeforeEndDate;
       });

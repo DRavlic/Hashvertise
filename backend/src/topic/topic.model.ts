@@ -72,10 +72,10 @@ export class Campaign {
   public txId!: string;
 
   @prop({ required: true, index: true })
-  public startDate!: Date;
+  public startDateUtc!: Date;
 
   @prop({ required: true, index: true })
-  public endDate!: Date;
+  public endDateUtc!: Date;
 }
 
 // Create and export the models
