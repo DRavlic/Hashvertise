@@ -16,7 +16,7 @@ import {
 } from "../environment";
 
 // Register the check-deposit task
-task("check-deposit", "Check deposit amount for an address and topic")
+task("check-deposit", "Check available prize amount for an address and topic")
   .addParam("contract", "The contract address")
   .addParam("address", "The payer address")
   .addParam("topicId", "The topic ID")
@@ -28,10 +28,10 @@ task("check-deposit", "Check deposit amount for an address and topic")
   .setAction(async (taskArgs) => {
     const { contract, address: payerAddress, topicId, chain } = taskArgs;
 
-    await checkDeposit(contract, payerAddress, topicId, chain);
+    await checkPrizeAmount(contract, payerAddress, topicId, chain);
   });
 
-async function checkDeposit(
+async function checkPrizeAmount(
   contract: string,
   payerAddress: string,
   topicId: string,
@@ -81,25 +81,23 @@ async function checkDeposit(
       solPayerAddress = payerAddress;
     }
 
-    const depositQuery = new ContractCallQuery()
+    const prizeQuery = new ContractCallQuery()
       .setContractId(contractId)
       .setGas(MAX_GAS)
       .setFunction(
-        "getDeposit",
+        "getPrizeAmount",
         new ContractFunctionParameters()
           .addAddress(solPayerAddress)
           .addString(topicId)
       );
 
-    const depositResult = await depositQuery.execute(client);
+    const prizeResult = await prizeQuery.execute(client);
 
     // Convert the result to a readable format - assuming it returns a uint256
-    const depositAmountTinybars = depositResult.getUint256(0).toString();
-    const depositInHbar = Hbar.fromTinybars(depositAmountTinybars);
+    const prizeAmountTinybars = prizeResult.getUint256(0).toString();
+    const prizeInHbar = Hbar.fromTinybars(prizeAmountTinybars);
 
-    console.log(
-      `Verified deposit: ${depositInHbar.toString()} for topic ${topicId}`
-    );
+    console.log(`Prize amount: ${prizeInHbar.toString()} for topic ${topicId}`);
   } catch (error) {
     console.error("Error:", error);
     process.exitCode = 1;

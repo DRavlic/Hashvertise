@@ -21,3 +21,11 @@ export const MAINNET_JSON_RPC_RELAY_URL =
 
 export const MAX_GAS = 1_000_000;
 export const TINYBARS_PER_HBAR = 100_000_000; // 1 HBAR = 100,000,000 tinybars
+
+export const ABSOLUTE_MINIMUM_DEPOSIT = 100_000_000; // 1 HBAR = 100,000,000 tinybars
+export const HASHVERTISE_FEE_BASIS_POINTS = parseInt(
+  process.env.HASHVERTISE_FEE_BASIS_POINTS || "100"
+); // 1% = 100 basis points
+export const HASHVERTISE_MINIMUM_DEPOSIT = parseInt(
+  process.env.HASHVERTISE_MINIMUM_DEPOSIT || "100000000"
+); // 1 HBAR = 100,000,000 tinybars
