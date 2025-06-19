@@ -77,11 +77,11 @@ export function CampaignDetails() {
 
   // Update campaign status periodically
   useEffect(() => {
-    if (!campaign?.startDate || !campaign?.endDate) return;
+    if (!campaign?.startDateUtc || !campaign?.endDateUtc) return;
 
     const updateStatus = () => {
       setCampaignStatusInfo(
-        getCampaignStatusInfo(campaign.startDate, campaign.endDate)
+        getCampaignStatusInfo(campaign.startDateUtc, campaign.endDateUtc)
       );
     };
 
@@ -92,7 +92,7 @@ export function CampaignDetails() {
     const interval = setInterval(updateStatus, COUNTDOWN_REFRESH_INTERVAL_MS);
 
     return () => clearInterval(interval);
-  }, [campaign?.startDate, campaign?.endDate]);
+  }, [campaign?.startDateUtc, campaign?.endDateUtc]);
 
   useEffect(() => {
     // Delay showing the form to prevent flashing
@@ -351,8 +351,8 @@ export function CampaignDetails() {
 
             {campaignStatusInfo && (
               <DateInfoBox
-                startDate={campaign.startDate}
-                endDate={campaign.endDate}
+                startDate={campaign.startDateUtc}
+                endDate={campaign.endDateUtc}
                 status={campaignStatusInfo.status}
                 className="mb-6"
               />

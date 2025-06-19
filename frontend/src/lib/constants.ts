@@ -29,3 +29,7 @@ export const HASHSCAN_URLS = {
   MAINNET: "https://hashscan.io/mainnet",
   TESTNET: "https://hashscan.io/testnet",
 };
+
+// Fee calculator constants
+export const TINYBARS_PER_HBAR = 100_000_000;
+export const BASIS_POINTS_DIVISOR = 10_000;

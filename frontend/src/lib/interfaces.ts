@@ -38,8 +38,8 @@ export interface Campaign {
   prizePool: number;
   requirement: string;
   createdAt: string;
-  startDate: string;
-  endDate: string;
+  startDateUtc: string;
+  endDateUtc: string;
 }
 
 export interface CampaignFormData {
@@ -60,4 +60,22 @@ export interface TopicMessage {
   message: string;
   consensusTimestamp: string;
   createdAt: string;
+}
+
+/**
+ * Hashvertise Configuration interfaces
+ */
+
+export interface HashvertiseConfig {
+  feeBasisPoints: number; // Fee in basis points (e.g., 1% = 100 basis points, 20% = 2000 basis points)
+  minimumDepositInTinybars: number;
+  contractAddress: string;
+}
+
+export interface CampaignCreationReceipt {
+  prizeAmountHbar: number; // Prize amount in HBAR
+  feeAmountHbar: number; // Fee amount in HBAR
+  totalAmountHbar: number; // Total amount to be paid in HBAR
+  feeBasisPoints: number; // Fee rate in basis points
+  isAboveMinimum: boolean; // Whether total amount meets minimum deposit
 }

@@ -19,4 +19,5 @@ export const API_ENDPOINTS = {
   GET_CAMPAIGN: (topicId: string) => `${API_URL}/topic/campaign/${topicId}`,
   GET_TOPIC_MESSAGES: (topicId: string) =>
     `${API_URL}/topic/messages/${topicId}`,
+  GET_CONFIG: `${API_URL}/hashvertise/config`,
 };

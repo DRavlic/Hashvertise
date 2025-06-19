@@ -88,8 +88,8 @@ export function Campaigns() {
                   </h3>
                   <StatusBadge
                     status={getCampaignStatus(
-                      campaign.startDate,
-                      campaign.endDate
+                      campaign.startDateUtc,
+                      campaign.endDateUtc
                     )}
                     className="flex-shrink-0"
                   />

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWallet } from "../hooks/useWallet";
 import { createTopic, signMessage, depositToContract } from "../lib/wallet";
@@ -21,7 +21,15 @@ import {
   MAX_CAMPAIGN_NAME_LENGTH,
   MAX_REQUIREMENT_LENGTH,
 } from "../lib/constants";
-import { CampaignFormData, CreationStep } from "../lib/interfaces";
+import {
+  CampaignFormData,
+  CreationStep,
+  HashvertiseConfig,
+  CampaignCreationReceipt,
+} from "../lib/interfaces";
+import { getCampaignCreationReceipt } from "../lib/campaign-receipt";
+import { tinybarsToHbar } from "../lib/hbar-utils";
+import { CampaignCreationReceiptModal } from "../components/CampaignCreationReceiptModal";
 
 export function CreateCampaign() {
   const navigate = useNavigate();
@@ -47,8 +55,34 @@ export function CreateCampaign() {
     CreationStep.IDLE
   );
   const [useCurrentTimeAsStart, setUseCurrentTimeAsStart] = useState(false);
+  const [config, setConfig] = useState<HashvertiseConfig | null>(null);
+  const [isLoadingConfig, setIsLoadingConfig] = useState(true);
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [campaignCreationReceipt, setCampaignCreationReceipt] =
+    useState<CampaignCreationReceipt | null>(null);
 
   const isPaired = connectionStatus === HashConnectConnectionState.Paired;
+
+  // Fetch config on component mount
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const response = await fetch(API_ENDPOINTS.GET_CONFIG);
+        if (!response.ok) {
+          throw new Error("Failed to fetch configuration");
+        }
+        const configData = await response.json();
+        setConfig(configData);
+      } catch (error) {
+        console.error("Error fetching config:", error);
+        showError("Failed to load configuration. Please refresh the page.");
+      } finally {
+        setIsLoadingConfig(false);
+      }
+    };
+
+    fetchConfig();
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -239,22 +273,40 @@ export function CreateCampaign() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!config) {
+      showError("Configuration not loaded. Please refresh the page.");
+      return;
+    }
+
+    if (!formData.startDate || !formData.endDate) {
+      showError("Please set both start and end dates");
+      return;
+    }
+
+    // Validate start date is before end date with full time comparison
+    if (!isBefore(formData.startDate, formData.endDate)) {
+      showError("Start date must be before end date");
+      return;
+    }
+
+    // Calculate fees and validate minimum deposit
+    const receipt = getCampaignCreationReceipt(formData.prizePool, config);
+    setCampaignCreationReceipt(receipt);
+
+    // Show the fee confirmation modal
+    setShowReceiptModal(true);
+  };
+
+  const handleFeeConfirmation = async () => {
+    if (!campaignCreationReceipt?.isAboveMinimum) {
+      return;
+    }
+
     setIsSubmitting(true);
+    setShowReceiptModal(false);
 
     try {
-      if (!formData.startDate || !formData.endDate) {
-        showError("Please set both start and end dates");
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Validate start date is before end date with full time comparison
-      if (!isBefore(formData.startDate, formData.endDate)) {
-        showError("Start date must be before end date");
-        setIsSubmitting(false);
-        return;
-      }
-
       // Step 0: Validate user info
       setCurrentStep(CreationStep.VALIDATING_USER);
       const validateResponse = await fetch(API_ENDPOINTS.VALIDATE_USER, {
@@ -286,11 +338,11 @@ export function CreateCampaign() {
 
       const { topicId, txId } = topicResponse;
 
-      // Step 2: Deposit HBAR to smart contract
+      // Step 2: Deposit HBAR to smart contract (use total amount which includes fee)
       setCurrentStep(CreationStep.DEPOSITING_HBAR);
       const depositResponse = await depositToContract(
         topicId.toString(),
-        formData.prizePool,
+        campaignCreationReceipt.totalAmountHbar, // Use total amount (prize + fee)
         validateData.user.evmAddress
       );
 
@@ -302,8 +354,8 @@ export function CreateCampaign() {
       }
 
       // Convert dates to UTC for backend
-      const startDateUTC = localToUtc(formData.startDate);
-      const endDateUTC = localToUtc(formData.endDate);
+      const startDateUTC = localToUtc(formData.startDate!);
+      const endDateUTC = localToUtc(formData.endDate!);
 
       const message = `${txId}, ${topicId}, ${formData.name}, ${accountId}, ${formData.prizePool}, ${formData.requirement}, ${startDateUTC}, ${endDateUTC}`;
 
@@ -369,6 +421,11 @@ export function CreateCampaign() {
     }
   };
 
+  // Get minimum deposit in HBAR for display
+  const minimumDepositHbar = config
+    ? tinybarsToHbar(config.minimumDepositInTinybars)
+    : 0;
+
   return (
     <div className="max-w-xl mx-auto">
       <h1 className="text-2xl font-bold text-primary-600 mb-6">
@@ -378,6 +435,13 @@ export function CreateCampaign() {
       {!isPaired && (
         <div className="mb-6 p-4 bg-warning-50 border border-warning-200 rounded-md text-warning-700">
           Please connect your wallet first to create a campaign.
+        </div>
+      )}
+
+      {isLoadingConfig && (
+        <div className="mb-6 p-4 bg-secondary-50 border border-secondary-200 rounded-md text-secondary-700 flex items-center">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600 mr-2"></div>
+          Loading configuration...
         </div>
       )}
 
@@ -410,20 +474,25 @@ export function CreateCampaign() {
             htmlFor="prizePool"
             className="block text-sm font-medium text-secondary-700 mb-1"
           >
-            Prize Pool (USD)
+            Prize Pool (HBAR)
           </label>
           <input
             type="number"
             id="prizePool"
             name="prizePool"
             min="0"
-            step="0.01"
+            step="1"
             value={formData.prizePool || ""}
             onChange={handleChange}
             required
             className="w-full px-4 py-2 border border-secondary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            placeholder="Enter prize amount in USD"
+            placeholder="Enter prize amount in HBAR"
           />
+          {config && (
+            <p className="mt-1 text-xs text-secondary-500">
+              Minimum total amount (prize + fee): {minimumDepositHbar} HBAR
+            </p>
+          )}
         </div>
 
         <div>
@@ -629,6 +698,7 @@ export function CreateCampaign() {
           disabled={
             isSubmitting ||
             !isPaired ||
+            isLoadingConfig ||
             (!formData.startDate && !useCurrentTimeAsStart) ||
             !formData.endDate
           }
@@ -637,6 +707,14 @@ export function CreateCampaign() {
           {getButtonText()}
         </button>
       </form>
+
+      <CampaignCreationReceiptModal
+        isOpen={showReceiptModal}
+        onClose={() => setShowReceiptModal(false)}
+        onConfirm={handleFeeConfirmation}
+        receipt={campaignCreationReceipt}
+        isLoading={isSubmitting}
+      />
     </div>
   );
 }
