@@ -26,3 +26,8 @@ export const TWITTERAPI_API_KEY = process.env.TWITTERAPI_API_KEY || "";
 // Smart contract configuration
 export const HASHVERTISE_SMART_CONTRACT_ADDRESS =
   process.env.HASHVERTISE_SMART_CONTRACT_ADDRESS || "";
+
+// Hashvertise configuration
+export const HASHVERTISE_MIN_FEE_BASIS_POINTS = 0; // 0%
+export const HASHVERTISE_MAX_FEE_BASIS_POINTS = 10000; // 100% (e.g. 20% = 2000 basis points)
+export const HASHVERTISE_MIN_DEPOSIT_TINYBARS = 100000000; // 1 HBAR
