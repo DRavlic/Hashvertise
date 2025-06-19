@@ -234,7 +234,7 @@ export const distributeReward = async (
       const score = requirementTweet.viewCount;
       accountScores.set(accountId, (accountScores.get(accountId) || 0) + score);
       logger.info(
-        `Added ${score} to account ${accountId} for ${XHandle}'s tweet created at ${requirementTweet.createdAt}`
+        `Awarded${score} score to account ${accountId} for ${XHandle}'s tweet created at ${requirementTweet.createdAt}`
       );
     }
 
