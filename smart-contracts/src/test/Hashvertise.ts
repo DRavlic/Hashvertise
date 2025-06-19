@@ -36,8 +36,8 @@ describe("Hashvertise", function () {
   });
 
   it("Should set the correct minimum deposit", async function () {
-    const minimumDeposit = await hashvertise.getMinimumDeposit();
-    expect(minimumDeposit).to.equal(HASHVERTISE_MINIMUM_DEPOSIT);
+    const minimumDepositInTinybars = await hashvertise.getMinimumDeposit();
+    expect(minimumDepositInTinybars).to.equal(HASHVERTISE_MINIMUM_DEPOSIT);
   });
 
   it("Should return the correct absolute minimum deposit", async function () {
