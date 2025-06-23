@@ -76,6 +76,9 @@ export class Campaign {
 
   @prop({ required: true, index: true })
   public endDateUtc!: Date;
+
+  @prop({ required: true, default: false })
+  public rewardsDistributed!: boolean;
 }
 
 // Create and export the models

@@ -6,6 +6,7 @@ import topicRoutes from "./topic/topic.routes";
 import xRoutes from "./x/x.routes";
 import userRoutes from "./user/user.routes";
 import hashvertiseRoutes from "./hashvertise/hashvertise.routes";
+import { initCronJobs } from "./cron/cron.scheduler";
 
 // Create Express app
 const app = express();
@@ -23,8 +24,11 @@ app.locals.hederaClient = hederaClient;
  * @access Public
  */
 app.get("/", (req: Request, res: Response) => {
-  res.json({ message: "Hashvertise API is running" });
+  res.send("Welcome to Hashvertise backend!");
 });
+
+// Initialize cron jobs
+initCronJobs();
 
 // Register routes
 app.use("/api/user", userRoutes);
