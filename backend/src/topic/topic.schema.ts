@@ -102,3 +102,12 @@ export const campaignGetSchema = z.object({
     }),
   }),
 });
+
+// Schema for getting campaign results by topic ID
+export const campaignResultsGetSchema = z.object({
+  params: z.object({
+    topicId: z.string({
+      required_error: "Topic ID is required",
+    }),
+  }),
+});

@@ -313,3 +313,32 @@ export const getCampaign = async (
     });
   }
 };
+
+/**
+ * Get campaign results by topic ID
+ * @route GET /api/topic/campaign/:topicId/results
+ * @access Public
+ */
+export const getCampaignResults = async (req: Request, res: Response) => {
+  try {
+    const { topicId } = req.params;
+    const campaign = await getCampaignByTopicId(topicId);
+    if (!campaign) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        success: false,
+        error: "Campaign not found",
+      });
+    }
+    return res.status(StatusCodes.OK).json({
+      success: true,
+      results: campaign.results || [],
+    });
+  } catch (error: any) {
+    logger.error("Error in getCampaignResults controller:", error);
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      error: "Internal server error",
+      details: error.message || String(error),
+    });
+  }
+};

@@ -15,6 +15,7 @@ import {
   TwitterUserInfoResponse,
   UserTweetsServiceResponse,
   UserInfoServiceResponse,
+  CampaignResultEntry,
 } from "./x.interfaces";
 import { TopicId } from "@hashgraph/sdk";
 import {
@@ -31,6 +32,7 @@ import {
 import { UserModel } from "../user/user.model";
 import { CAMPAIGN_COMPLETION_MESSAGE_PREFIX } from "../common/common.constants";
 import BigNumber from "bignumber.js";
+import { CampaignModel } from "../topic/topic.model";
 
 /**
  * Fetches the last tweets of a Twitter user
@@ -234,7 +236,7 @@ export const distributeReward = async (
       const score = requirementTweet.viewCount;
       accountScores.set(accountId, (accountScores.get(accountId) || 0) + score);
       logger.info(
-        `Awarded${score} score to account ${accountId} for ${XHandle}'s tweet created at ${requirementTweet.createdAt}`
+        `Awarded ${score} score to account ${accountId} for ${XHandle}'s tweet created at ${requirementTweet.createdAt}`
       );
     }
 
@@ -333,6 +335,24 @@ export const distributeReward = async (
       }
     }
 
+    // Build results array for winners
+    const results: CampaignResultEntry[] = [];
+    for (const [accountId, rewardHbarBigNum] of distributionEntries) {
+      // Find the original topic message for this accountId
+      const messageObj = messages.find((msg) => {
+        const parsed = parseTopicMessage(msg.message);
+        return parsed && parsed.accountId === accountId;
+      });
+      const xHandle = messageObj
+        ? parseTopicMessage(messageObj.message)?.XHandle || ""
+        : "";
+      results.push({
+        accountId,
+        xHandle,
+        prizeWonHbar: Number(rewardHbarBigNum.toFixed()),
+      });
+    }
+
     // Submit result of campaign as topic message
     const messageToSign = `${CAMPAIGN_COMPLETION_MESSAGE_PREFIX} ${topicId}. Final results by account ${HEDERA_OPERATOR_ID_ECDSA} are ${resultString}`;
     const signature = signMessage(messageToSign);
@@ -350,6 +370,15 @@ export const distributeReward = async (
     logger.info(
       `Successfully submitted results of reward distribution to topic ${topicId}`
     );
+
+    // After successful distribution, save results to campaign
+    if (distributionEntries.length > 0 && campaign) {
+      await CampaignModel.findOneAndUpdate(
+        { topicId },
+        { $set: { results } },
+        { new: true }
+      );
+    }
 
     return {
       success: true,

@@ -5,6 +5,7 @@ import {
   Severity,
   index,
 } from "@typegoose/typegoose";
+import { CampaignResultEntry } from "src/x/x.interfaces";
 
 @modelOptions({
   schemaOptions: {
@@ -79,6 +80,12 @@ export class Campaign {
 
   @prop({ required: true, default: false })
   public rewardsDistributed!: boolean;
+
+  @prop({
+    type: () => [Object],
+    default: [],
+  })
+  public results!: CampaignResultEntry[];
 }
 
 // Create and export the models

@@ -123,3 +123,9 @@ export interface UserInfoServiceResponse {
   userInfo?: TwitterUserInfo;
   error?: string;
 }
+
+export interface CampaignResultEntry {
+  accountId: string;
+  xHandle: string;
+  prizeWonHbar: number;
+}

@@ -6,6 +6,7 @@ import {
   verifyCampaignAndCreate,
   getCampaigns,
   getCampaign,
+  getCampaignResults,
 } from "./topic.controller";
 import { validateRequest } from "../common/common.middleware";
 import {
@@ -15,6 +16,7 @@ import {
   campaignVerifySchema,
   campaignsListSchema,
   campaignGetSchema,
+  campaignResultsGetSchema,
 } from "./topic.schema";
 
 const router = express.Router();
@@ -79,6 +81,17 @@ router.get(
   "/campaign/:topicId",
   validateRequest(campaignGetSchema),
   getCampaign
+);
+
+/**
+ * @route GET /api/topic/campaign/:topicId/results
+ * @description Get results for a campaign by topic ID
+ * @access Public
+ */
+router.get(
+  "/campaign/:topicId/results",
+  validateRequest(campaignResultsGetSchema),
+  getCampaignResults
 );
 
 export default router;
