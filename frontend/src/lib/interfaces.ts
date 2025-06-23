@@ -30,6 +30,12 @@ export interface CampaignStatusInfo {
   timeDisplay: string | null;
 }
 
+export interface CampaignResultEntry {
+  accountId: string;
+  xHandle: string;
+  prizeWonHbar: number;
+}
+
 export interface Campaign {
   _id: string;
   topicId: string;
@@ -40,6 +46,8 @@ export interface Campaign {
   createdAt: string;
   startDateUtc: string;
   endDateUtc: string;
+  rewardsDistributed?: boolean;
+  results?: CampaignResultEntry[];
 }
 
 export interface CampaignFormData {
