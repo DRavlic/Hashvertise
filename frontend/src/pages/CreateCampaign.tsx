@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWallet } from "../hooks/useWallet";
 import { createTopic, signMessage, depositToContract } from "../lib/wallet";
@@ -20,6 +20,7 @@ import {
   DEFAULT_START_TO_END_TIME_DIFF_HOURS,
   MAX_CAMPAIGN_NAME_LENGTH,
   MAX_REQUIREMENT_LENGTH,
+  BASIS_POINTS_DIVISOR,
 } from "../lib/constants";
 import {
   CampaignFormData,
@@ -60,6 +61,7 @@ export function CreateCampaign() {
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [campaignCreationReceipt, setCampaignCreationReceipt] =
     useState<CampaignCreationReceipt | null>(null);
+  const [prizePoolError, setPrizePoolError] = useState("");
 
   const isPaired = connectionStatus === HashConnectConnectionState.Paired;
 
@@ -84,14 +86,39 @@ export function CreateCampaign() {
     fetchConfig();
   }, []);
 
+  const minimumPrizePoolHbar = useMemo(() => {
+    if (!config) {
+      return 0;
+    }
+    const minDepositHbar = tinybarsToHbar(config.minimumDepositInTinybars);
+    const feeMultiplier = 1 + config.feeBasisPoints / BASIS_POINTS_DIVISOR;
+    return minDepositHbar / feeMultiplier;
+  }, [config]);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
+    const isPrizePool = name === "prizePool";
+    const parsedValue = isPrizePool ? parseFloat(value) || 0 : value;
+
     setFormData({
       ...formData,
-      [name]: name === "prizePool" ? parseFloat(value) || 0 : value,
+      [name]: parsedValue,
     });
+
+    if (isPrizePool) {
+      const prizeValue = parsedValue as number;
+      if (config && prizeValue > 0 && prizeValue < minimumPrizePoolHbar) {
+        setPrizePoolError(
+          `To meet platform requirements, the prize pool must be at least ~${minimumPrizePoolHbar.toFixed(
+            4
+          )} HBAR.`
+        );
+      } else {
+        setPrizePoolError("");
+      }
+    }
   };
 
   const handleDateChange = (
@@ -421,11 +448,6 @@ export function CreateCampaign() {
     }
   };
 
-  // Get minimum deposit in HBAR for display
-  const minimumDepositHbar = config
-    ? tinybarsToHbar(config.minimumDepositInTinybars)
-    : 0;
-
   return (
     <div className="max-w-xl mx-auto">
       <h1 className="text-2xl font-bold text-primary-600 mb-6">
@@ -488,10 +510,8 @@ export function CreateCampaign() {
             className="w-full px-4 py-2 border border-secondary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             placeholder="Enter prize amount in HBAR"
           />
-          {config && (
-            <p className="mt-1 text-xs text-secondary-500">
-              Minimum total amount (prize + fee): {minimumDepositHbar} HBAR
-            </p>
+          {prizePoolError && (
+            <p className="mt-1 text-xs text-warning-700">{prizePoolError}</p>
           )}
         </div>
 
