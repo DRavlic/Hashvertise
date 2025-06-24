@@ -16,6 +16,7 @@ export const TOAST_DURATION_MS = 3000; // 3 seconds
 export const COUNTDOWN_REFRESH_INTERVAL_MS = 60000; // 1 minute
 export const DEFAULT_START_TO_END_TIME_DIFF_HOURS = 12; // only set at the rendering of the CreateCampaign page
 export const START_TO_END_TIME_DIFF_MINUTES = 1;
+export const DEBOUNCE_DELAY_MS = 500; // 0.5 seconds
 
 // Input length constraints
 export const MAX_CAMPAIGN_NAME_LENGTH = 40;

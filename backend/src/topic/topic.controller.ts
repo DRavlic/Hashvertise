@@ -243,22 +243,27 @@ export const verifyCampaignAndCreate = async (
 };
 
 /**
- * @route GET /api/topic/campaigns
- * @description Get all campaigns with pagination
- * @access Public
+ * Get all campaigns with pagination
+ *
+ * @param req - Express request object containing page, limit, name, sortBy, sortOrder, and statuses in query
+ * @param res - Express response object
+ * @returns A list of campaigns and total count
  */
 export const getCampaigns = async (req: Request, res: Response) => {
   try {
-    const page = parseInt(req.query.page as string) || DEFAULT_PAGE;
-    const limit =
-      parseInt(req.query.limit as string) || DEFAULT_CAMPAIGNS_LIMIT;
-    const skip = (page - 1) * limit;
+    const {
+      page = DEFAULT_PAGE,
+      limit = DEFAULT_CAMPAIGNS_LIMIT,
+      name,
+      sortBy,
+      sortOrder,
+      statuses,
+    } = req.query as any;
 
-    // Get total count for pagination
-    const total = await countCampaigns();
-
-    // Get campaigns for current page
-    const campaigns = await listCampaigns(skip, limit);
+    const [campaigns, total] = await Promise.all([
+      listCampaigns(page, limit, { name, sortBy, sortOrder, statuses }),
+      countCampaigns({ name, statuses }),
+    ]);
 
     return res.status(StatusCodes.OK).json({
       success: true,
@@ -266,13 +271,12 @@ export const getCampaigns = async (req: Request, res: Response) => {
       total,
       page,
       limit,
-      totalPages: Math.ceil(total / limit),
     });
-  } catch (error) {
-    logger.error("Error getting campaigns: " + error);
+  } catch (error: any) {
+    logger.error("Error in getCampaigns controller:", error);
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      success: false,
       error: "Internal server error",
+      details: error.message || String(error),
     });
   }
 };
@@ -316,8 +320,10 @@ export const getCampaign = async (
 
 /**
  * Get campaign results by topic ID
- * @route GET /api/topic/campaign/:topicId/results
- * @access Public
+ *
+ * @param req - Express request object containing topicId in params
+ * @param res - Express response object
+ * @returns A list of campaign results
  */
 export const getCampaignResults = async (req: Request, res: Response) => {
   try {

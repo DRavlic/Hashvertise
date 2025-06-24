@@ -90,6 +90,16 @@ export const campaignsListSchema = z.object({
         .transform((val) =>
           val ? parseInt(val, 10) : DEFAULT_CAMPAIGNS_LIMIT
         ),
+      name: z.string().optional(),
+      sortBy: z
+        .enum(["createdAt", "prizePool", "startDateUtc", "endDateUtc"])
+        .optional()
+        .default("createdAt"),
+      sortOrder: z.enum(["asc", "desc"]).optional().default("desc"),
+      statuses: z
+        .string()
+        .optional()
+        .transform((val) => (val ? val.split(",") : [])),
     })
     .optional(),
 });

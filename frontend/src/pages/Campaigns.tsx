@@ -1,11 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { API_ENDPOINTS } from "../lib/environment";
 import { showError, getErrorMessage } from "../lib/toast";
 import { CAMPAIGNS_PER_PAGE } from "../lib/constants";
 import { getCampaignStatus } from "../lib/date";
-import { Campaign } from "../lib/interfaces";
+import { Campaign, CampaignFilters, CampaignStatus } from "../lib/interfaces";
 import { StatusBadge } from "../components/StatusBadge";
+import { CampaignsFilterBar } from "../components/CampaignsFilterBar";
+import { CampaignSortOption } from "../lib/enums";
 
 export function Campaigns() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -13,34 +15,64 @@ export function Campaigns() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
+  const [filters, setFilters] = useState<CampaignFilters>({
+    searchTerm: "",
+    sortOption: CampaignSortOption.NEWEST,
+    selectedStatuses: [CampaignStatus.UPCOMING, CampaignStatus.ACTIVE],
+  });
+
+  const handleFilterChange = useCallback((newFilters: CampaignFilters) => {
+    setFilters(newFilters);
+    setCurrentPage(1); // Reset to page 1 when filters change
+  }, []);
+
   useEffect(() => {
-    fetchCampaigns(currentPage);
-  }, [currentPage]);
+    const fetchCampaigns = async () => {
+      setIsLoading(true);
+      try {
+        const params = new URLSearchParams({
+          page: currentPage.toString(),
+          limit: CAMPAIGNS_PER_PAGE.toString(),
+          sortBy: filters.sortOption.split("-")[0],
+          sortOrder: filters.sortOption.split("-")[1],
+        });
 
-  const fetchCampaigns = async (page: number) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(
-        `${API_ENDPOINTS.GET_CAMPAIGNS}?page=${page}&limit=${CAMPAIGNS_PER_PAGE}`
-      );
-      const data = await response.json();
+        if (filters.searchTerm) {
+          params.append("name", filters.searchTerm);
+        }
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to fetch campaigns");
+        if (filters.selectedStatuses.length > 0) {
+          params.append("statuses", filters.selectedStatuses.join(","));
+        }
+
+        const response = await fetch(
+          `${API_ENDPOINTS.GET_CAMPAIGNS}?${params.toString()}`
+        );
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to fetch campaigns");
+        }
+
+        setCampaigns(data.campaigns);
+        setTotalPages(Math.ceil(data.total / CAMPAIGNS_PER_PAGE));
+      } catch (error) {
+        console.error("Error fetching campaigns:", getErrorMessage(error));
+        showError(`Error fetching campaigns: ${getErrorMessage(error)}`);
+        setCampaigns([]);
+        setTotalPages(1);
+      } finally {
+        setIsLoading(false);
       }
+    };
 
-      setCampaigns(data.campaigns);
-      setTotalPages(Math.ceil(data.total / CAMPAIGNS_PER_PAGE));
-    } catch (error) {
-      console.error("Error fetching campaigns:", getErrorMessage(error));
-      showError(`Error fetching campaigns: ${getErrorMessage(error)}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    fetchCampaigns();
+  }, [currentPage, filters]);
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
   };
 
   return (
@@ -55,6 +87,8 @@ export function Campaigns() {
         </Link>
       </div>
 
+      <CampaignsFilterBar onFilterChange={handleFilterChange} />
+
       {isLoading ? (
         <div className="flex justify-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
@@ -65,7 +99,7 @@ export function Campaigns() {
             No Campaigns Found
           </h2>
           <p className="text-secondary-600 mb-6">
-            Be the first to create an advertising campaign on Hashvertise!
+            Try adjusting your filters or be the first to create a campaign!
           </p>
           <Link
             to="/campaign/new"

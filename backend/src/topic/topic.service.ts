@@ -607,6 +607,7 @@ export const createCampaign = async (
       endDateUtc: campaignData.endDateUtc,
     });
 
+    logger.info(`Campaign ${campaign.name} created successfully`);
     return {
       success: true,
       campaign: campaign.toJSON(),
@@ -621,51 +622,96 @@ export const createCampaign = async (
 };
 
 /**
- * Count all campaigns
- * @returns {Promise<number>} Total number of campaigns
+ * Get the total count of campaigns based on optional filters.
+ *
+ * @param filters - Optional filters for name and statuses.
+ * @returns The total number of campaigns matching the filters.
  */
-export const countCampaigns = async (): Promise<number> => {
-  try {
-    return await CampaignModel.countDocuments();
-  } catch (error) {
-    logger.error("Error counting campaigns:", error);
-    throw error;
-  }
+export const countCampaigns = async (
+  filters: { name?: string; statuses?: string[] } = {}
+): Promise<number> => {
+  const query = buildCampaignQuery(filters);
+  return CampaignModel.countDocuments(query);
 };
 
 /**
- * Get all campaigns with pagination
- * @param {number} skip Number of campaigns to skip
- * @param {number} limit Maximum number of campaigns to return
- * @returns {Promise<Campaign[]>} Array of campaigns
+ * Get a paginated list of campaigns based on optional filters and sorting.
+ *
+ * @param page - The page number to retrieve.
+ * @param limit - The number of campaigns per page.
+ * @param options - Optional filters and sorting options.
+ * @returns A list of campaigns for the specified page.
  */
 export const listCampaigns = async (
-  skip: number,
-  limit: number
+  page: number,
+  limit: number,
+  options: {
+    name?: string;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
+    statuses?: string[];
+  } = {}
 ): Promise<Campaign[]> => {
-  try {
-    return await CampaignModel.find()
-      .sort({ createdAt: -1 }) // Sort by newest first
-      .skip(skip)
-      .limit(limit);
-  } catch (error) {
-    logger.error("Error listing campaigns: " + error);
-    throw error;
-  }
+  const { sortBy = "createdAt", sortOrder = "desc" } = options;
+  const skip = (page - 1) * limit;
+
+  const query = buildCampaignQuery(options);
+
+  return CampaignModel.find(query)
+    .sort({ [sortBy]: sortOrder === "desc" ? -1 : 1 })
+    .skip(skip)
+    .limit(limit)
+    .lean();
 };
 
 /**
- * Get a campaign by topic ID
+ * Get a campaign by its topic ID
  * @param {string} topicId Topic ID of the campaign
  * @returns {Promise<Campaign | null>} Campaign or null if not found
  */
 export const getCampaignByTopicId = async (
   topicId: string
 ): Promise<Campaign | null> => {
-  try {
-    return await CampaignModel.findOne({ topicId });
-  } catch (error) {
-    logger.error(`Error getting campaign by topic ID ${topicId}: ${error}`);
-    throw error;
+  return CampaignModel.findOne({ topicId }).lean();
+};
+
+/**
+ * Build a dynamic query for fetching campaigns based on filters.
+ *
+ * @param filters - Optional filters for name and statuses.
+ * @returns A MongoDB query object.
+ */
+const buildCampaignQuery = (
+  filters: { name?: string; statuses?: string[] } = {}
+) => {
+  const { name, statuses } = filters;
+  const query: any = {};
+
+  if (name) {
+    query.name = { $regex: name, $options: "i" }; // Case-insensitive search
   }
+
+  if (statuses && statuses.length > 0) {
+    const now = new Date();
+    const statusConditions: any[] = [];
+
+    if (statuses.includes("UPCOMING")) {
+      statusConditions.push({ startDateUtc: { $gt: now } });
+    }
+    if (statuses.includes("ACTIVE")) {
+      statusConditions.push({
+        startDateUtc: { $lte: now },
+        endDateUtc: { $gt: now },
+      });
+    }
+    if (statuses.includes("ENDED")) {
+      statusConditions.push({ endDateUtc: { $lte: now } });
+    }
+
+    if (statusConditions.length > 0) {
+      query.$or = statusConditions;
+    }
+  }
+
+  return query;
 };

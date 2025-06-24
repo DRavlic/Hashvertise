@@ -1,3 +1,5 @@
+import { CampaignSortOption } from "./enums";
+
 /**
  * Campaign-related interfaces
  */
@@ -56,6 +58,16 @@ export interface CampaignFormData {
   requirement: string;
   startDate: Date | null;
   endDate: Date | null;
+}
+
+export interface CampaignsFilterBarProps {
+  onFilterChange: (filters: CampaignFilters) => void;
+}
+
+export interface CampaignFilters {
+  searchTerm: string;
+  sortOption: CampaignSortOption;
+  selectedStatuses: CampaignStatus[];
 }
 
 /**
