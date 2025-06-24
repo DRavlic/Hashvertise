@@ -109,7 +109,7 @@ export function CreateCampaign() {
 
     if (isPrizePool) {
       const prizeValue = parsedValue as number;
-      if (config && prizeValue > 0 && prizeValue < minimumPrizePoolHbar) {
+      if (config && prizeValue < minimumPrizePoolHbar) {
         setPrizePoolError(
           `To meet platform requirements, the prize pool must be at least ~${minimumPrizePoolHbar.toFixed(
             4
@@ -317,6 +317,25 @@ export function CreateCampaign() {
       return;
     }
 
+    // Validate name is not empty
+    if (!formData.name) {
+      showError("Please set a campaign name before creating the campaign.");
+      return;
+    }
+
+    // Manually validate prize pool since we disabled native validation
+    if (prizePoolError) {
+      showError(
+        "Please set correct prize pool amount before creating the campaign."
+      );
+      return;
+    }
+
+    if (formData.prizePool <= 0) {
+      showError("Prize pool must be a positive amount.");
+      return;
+    }
+
     // Calculate fees and validate minimum deposit
     const receipt = getCampaignCreationReceipt(formData.prizePool, config);
     setCampaignCreationReceipt(receipt);
@@ -467,7 +486,7 @@ export function CreateCampaign() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} noValidate className="space-y-6">
         <div>
           <label
             htmlFor="name"
