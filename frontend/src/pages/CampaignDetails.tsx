@@ -496,18 +496,20 @@ export function CampaignDetails() {
                 No applicants yet. Be the first!
               </p>
             ) : (
-              <ul className="divide-y divide-secondary-200">
-                {applicantMessages.map((message) => (
-                  <li key={message._id} className="py-3">
-                    <div className="font-medium text-secondary-800">
-                      {message.message}
-                    </div>
-                    <div className="text-xs text-secondary-500 mt-1">
-                      {formatUtcDateTime(message.consensusTimestamp)}
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              <div className="max-h-[640px] overflow-y-auto pr-2">
+                <ul className="divide-y divide-secondary-200">
+                  {applicantMessages.map((message) => (
+                    <li key={message._id} className="py-3">
+                      <div className="text-sm font-medium text-secondary-800 break-words">
+                        {message.message}
+                      </div>
+                      <div className="text-xs text-secondary-500 mt-1">
+                        {formatUtcDateTime(message.consensusTimestamp)}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
           </div>
         </div>
