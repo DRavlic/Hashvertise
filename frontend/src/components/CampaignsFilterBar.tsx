@@ -45,8 +45,8 @@ export function CampaignsFilterBar({
   ];
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-sm border border-secondary-200 mb-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
+    <div className="bg-white p-3 rounded-lg shadow-sm border border-secondary-200 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 items-end">
         {/* Search by Name */}
         <div>
           <label
@@ -60,7 +60,7 @@ export function CampaignsFilterBar({
             id="search"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-3 py-2 border border-secondary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-1.5 border border-secondary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
             placeholder="Enter campaign name..."
           />
         </div>
@@ -79,7 +79,7 @@ export function CampaignsFilterBar({
             onChange={(e) =>
               setSortOption(e.target.value as CampaignSortOption)
             }
-            className="w-full px-3 py-2 border border-secondary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-1.5 border border-secondary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <option value={CampaignSortOption.NEWEST}>Newest</option>
             <option value={CampaignSortOption.PRIZE_HIGH_TO_LOW}>
@@ -105,10 +105,10 @@ export function CampaignsFilterBar({
 
         {/* Filter by Status */}
         <div className="lg:col-span-1">
-          <label className="block text-sm font-medium text-secondary-700 mb-2">
+          <label className="block text-sm font-medium text-secondary-700 mb-1">
             Filter by Status
           </label>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3 py-1.5">
             {statusOptions.map(({ label, value }) => (
               <label key={value} className="flex items-center space-x-2">
                 <input
