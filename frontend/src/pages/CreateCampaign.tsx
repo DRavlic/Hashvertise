@@ -323,7 +323,7 @@ export function CreateCampaign() {
       return;
     }
 
-    // Manually validate prize pool since we disabled native validation
+    // Validate prize pool
     if (prizePoolError) {
       showError(
         "Please set correct prize pool amount before creating the campaign."
@@ -331,8 +331,9 @@ export function CreateCampaign() {
       return;
     }
 
-    if (formData.prizePool <= 0) {
-      showError("Prize pool must be a positive amount.");
+    // Validate requirement
+    if (!formData.requirement) {
+      showError("Please set a requirement before creating the campaign.");
       return;
     }
 
@@ -345,7 +346,7 @@ export function CreateCampaign() {
   };
 
   const handleFeeConfirmation = async () => {
-    if (!campaignCreationReceipt?.isAboveMinimum) {
+    if (!campaignCreationReceipt) {
       return;
     }
 
@@ -486,6 +487,7 @@ export function CreateCampaign() {
         </div>
       )}
 
+      {/* Validate form in handleSubmit */}
       <form onSubmit={handleSubmit} noValidate className="space-y-6">
         <div>
           <label

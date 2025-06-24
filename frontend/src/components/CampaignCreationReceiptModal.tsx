@@ -19,8 +19,6 @@ export function CampaignCreationReceiptModal({
 }: CampaignCreationReceiptModalProps) {
   if (!isOpen) return null;
 
-  const canProceed = receipt?.isAboveMinimum ?? false;
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
@@ -82,33 +80,6 @@ export function CampaignCreationReceiptModal({
               </div>
             </div>
 
-            {!canProceed && (
-              <div className="bg-warning-50 border border-warning-200 rounded-lg p-4">
-                <div className="flex items-start">
-                  <svg
-                    className="w-5 h-5 text-warning-400 mt-0.5 mr-3 flex-shrink-0"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <div>
-                    <h4 className="text-sm font-medium text-warning-800">
-                      Amount Below Minimum
-                    </h4>
-                    <p className="text-sm text-warning-700 mt-1">
-                      The total amount is below the minimum deposit requirement.
-                      Please increase your prize pool.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
             <div className="text-xs text-secondary-500">
               <p>
                 • The prize pool amount will be distributed to campaign
@@ -134,7 +105,7 @@ export function CampaignCreationReceiptModal({
           </button>
           <button
             onClick={onConfirm}
-            disabled={isLoading || !canProceed}
+            disabled={isLoading}
             className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors disabled:bg-secondary-400 disabled:cursor-not-allowed flex items-center justify-center"
           >
             {isLoading ? (
