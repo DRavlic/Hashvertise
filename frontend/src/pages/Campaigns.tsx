@@ -9,17 +9,39 @@ import { StatusBadge } from "../components/StatusBadge";
 import { CampaignsFilterBar } from "../components/CampaignsFilterBar";
 import { CampaignSortOption } from "../lib/enums";
 
+// Used for remembering filters and page number between pages
+const CAMPAIGNS_STATE_KEY = "campaignsState";
+
 export function Campaigns() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
 
-  const [filters, setFilters] = useState<CampaignFilters>({
-    searchTerm: "",
-    sortOption: CampaignSortOption.NEWEST,
-    selectedStatuses: [CampaignStatus.UPCOMING, CampaignStatus.ACTIVE],
+  // Initialize state from sessionStorage or use defaults
+  const [currentPage, setCurrentPage] = useState(() => {
+    const savedState = sessionStorage.getItem(CAMPAIGNS_STATE_KEY);
+    return savedState ? JSON.parse(savedState).page : 1;
   });
+  const [totalPages, setTotalPages] = useState(1);
+  const [filters, setFilters] = useState<CampaignFilters>(() => {
+    const savedState = sessionStorage.getItem(CAMPAIGNS_STATE_KEY);
+    if (savedState) {
+      return JSON.parse(savedState).filters;
+    }
+    return {
+      searchTerm: "",
+      sortOption: CampaignSortOption.NEWEST,
+      selectedStatuses: [CampaignStatus.UPCOMING, CampaignStatus.ACTIVE],
+    };
+  });
+
+  // Save state to sessionStorage whenever it changes
+  useEffect(() => {
+    const stateToSave = {
+      page: currentPage,
+      filters: filters,
+    };
+    sessionStorage.setItem(CAMPAIGNS_STATE_KEY, JSON.stringify(stateToSave));
+  }, [currentPage, filters]);
 
   const handleFilterChange = useCallback((newFilters: CampaignFilters) => {
     setFilters(newFilters);
@@ -87,7 +109,10 @@ export function Campaigns() {
         </Link>
       </div>
 
-      <CampaignsFilterBar onFilterChange={handleFilterChange} />
+      <CampaignsFilterBar
+        initialFilters={filters}
+        onFilterChange={handleFilterChange}
+      />
 
       {isLoading ? (
         <div className="flex justify-center py-12">

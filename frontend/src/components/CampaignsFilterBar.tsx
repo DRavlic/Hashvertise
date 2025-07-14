@@ -5,20 +5,21 @@ import { useDebounce } from "../hooks/useDebounce";
 import { DEBOUNCE_DELAY_MS } from "../lib/constants";
 
 interface CampaignsFilterBarProps {
+  initialFilters: CampaignFilters;
   onFilterChange: (filters: CampaignFilters) => void;
 }
 
 export function CampaignsFilterBar({
+  initialFilters,
   onFilterChange,
 }: CampaignsFilterBarProps) {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(initialFilters.searchTerm);
   const [sortOption, setSortOption] = useState<CampaignSortOption>(
-    CampaignSortOption.NEWEST
+    initialFilters.sortOption
   );
-  const [selectedStatuses, setSelectedStatuses] = useState<CampaignStatus[]>([
-    CampaignStatus.UPCOMING,
-    CampaignStatus.ACTIVE,
-  ]);
+  const [selectedStatuses, setSelectedStatuses] = useState<CampaignStatus[]>(
+    initialFilters.selectedStatuses
+  );
 
   const debouncedSearchTerm = useDebounce(searchTerm, DEBOUNCE_DELAY_MS);
 
