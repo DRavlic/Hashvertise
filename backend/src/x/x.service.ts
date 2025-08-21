@@ -163,6 +163,8 @@ export const fetchUserInfo = async (
 export const distributeReward = async (
   topicId: string
 ): Promise<DistributeRewardResponse> => {
+  let txId;
+
   try {
     logger.info(`Reward distribution started for topic: ${topicId}`);
 
@@ -310,29 +312,27 @@ export const distributeReward = async (
         amountsHbarBigNum.push(rewardHbarBigNum);
       }
 
-      if (participantEvmAddresses.length > 0) {
-        const txId = await distributePrizeToParticipants(
-          hederaClient,
-          HASHVERTISE_SMART_CONTRACT_ADDRESS,
-          advertiser.evmAddress,
-          topicId,
-          participantEvmAddresses,
-          amountsHbarBigNum
-        );
+      txId = await distributePrizeToParticipants(
+        hederaClient,
+        HASHVERTISE_SMART_CONTRACT_ADDRESS,
+        advertiser.evmAddress,
+        topicId,
+        participantEvmAddresses,
+        amountsHbarBigNum
+      );
 
-        if (txId) {
-          logger.info(
-            `Smart contract prize distribution successful. Transaction ID: ${txId}`
-          );
-        } else {
-          logger.error(`Smart contract prize distribution failed`);
-          throw new Error("Smart contract prize distribution failed");
-        }
-      } else {
-        logger.warn(
-          `No valid participant addresses found for smart contract distribution`
+      if (txId) {
+        logger.info(
+          `Smart contract prize distribution successful. Transaction ID: ${txId}`
         );
+      } else {
+        logger.error(`Smart contract prize distribution failed`);
+        throw new Error("Smart contract prize distribution failed");
       }
+    } else {
+      logger.warn(
+        `No valid participant addresses found for smart contract distribution`
+      );
     }
 
     // Build results array for winners
@@ -375,7 +375,12 @@ export const distributeReward = async (
     if (distributionEntries.length > 0 && campaign) {
       await CampaignModel.findOneAndUpdate(
         { topicId },
-        { $set: { results } },
+        {
+          $set: {
+            results,
+            resultTxId: txId,
+          },
+        },
         { new: true }
       );
     }

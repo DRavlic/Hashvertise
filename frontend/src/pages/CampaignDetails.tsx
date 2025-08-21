@@ -364,7 +364,7 @@ export function CampaignDetails() {
                 href={getHashscanTopicUrl(campaign.topicId, getLedgerId())}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="ml-1 text-primary-600 hover:text-primary-700 hover:underline flex items-center"
+                className="ml-1 text-primary-600 hover:text-primary-700 hover:underline flex items-center font-semibold"
                 title="View on Hashscan"
               >
                 <span>{campaign.topicId}</span>
@@ -520,6 +520,7 @@ export function CampaignDetails() {
         onClose={() => setShowResultsModal(false)}
         results={results}
         isLoading={isLoadingResults}
+        resultTxId={campaign.resultTxId}
       />
     </div>
   );

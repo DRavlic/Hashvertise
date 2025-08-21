@@ -81,9 +81,13 @@ export class Campaign {
   @prop({ required: true, default: false })
   public rewardsDistributed!: boolean;
 
+  @prop({ required: false })
+  public resultTxId?: string;
+
   @prop({
     type: () => [Object],
     default: [],
+    required: false,
   })
   public results!: CampaignResultEntry[];
 }

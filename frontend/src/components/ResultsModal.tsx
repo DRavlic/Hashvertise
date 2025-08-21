@@ -1,10 +1,13 @@
 import { CampaignResultEntry } from "../lib/interfaces";
+import { getHashscanTxUrl } from "../lib/url";
+import { getLedgerId } from "../lib/wallet";
 
 interface ResultsModalProps {
   isOpen: boolean;
   onClose: () => void;
   results: CampaignResultEntry[];
   isLoading: boolean;
+  resultTxId: string;
 }
 
 export function ResultsModal({
@@ -12,6 +15,7 @@ export function ResultsModal({
   onClose,
   results,
   isLoading,
+  resultTxId,
 }: ResultsModalProps) {
   if (!isOpen) return null;
 
@@ -36,9 +40,19 @@ export function ResultsModal({
             />
           </svg>
         </button>
-        <h3 className="text-lg font-semibold text-secondary-900 mb-4">
+        <h3 className="text-lg font-semibold text-secondary-900 mb-1">
           Campaign Results
         </h3>
+        {resultTxId && (
+          <a
+            href={getHashscanTxUrl(resultTxId, getLedgerId())}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-primary-600 hover:text-primary-700 hover:underline mb-4 inline-block font-semibold"
+          >
+            View transaction on Hashscan
+          </a>
+        )}
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
