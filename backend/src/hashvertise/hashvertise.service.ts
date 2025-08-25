@@ -32,7 +32,7 @@ export const setConfig = async (
       existingConfig.feeBasisPoints = configData.feeBasisPoints;
       existingConfig.minimumDepositInTinybars =
         configData.minimumDepositInTinybars;
-      existingConfig.contractAddress = configData.contractAddress;
+      existingConfig.contractAddress = configData.contractAddress; // can be either Ethereum or Hedera format
 
       const updatedConfig = await existingConfig.save();
       return updatedConfig;

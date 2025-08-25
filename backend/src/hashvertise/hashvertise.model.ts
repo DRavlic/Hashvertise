@@ -36,7 +36,7 @@ export class Hashvertise {
   public minimumDepositInTinybars!: number;
 
   @prop({ required: true, trim: true })
-  public contractAddress!: string;
+  public contractAddress!: string; // can be either Ethereum or Hedera format
 }
 
 export const HashvertiseModel = getModelForClass(Hashvertise);
