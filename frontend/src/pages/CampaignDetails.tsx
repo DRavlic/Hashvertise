@@ -520,7 +520,7 @@ export function CampaignDetails() {
         onClose={() => setShowResultsModal(false)}
         results={results}
         isLoading={isLoadingResults}
-        resultTxId={campaign.resultTxId}
+        resultTxId={campaign.resultTxId || ""}
       />
     </div>
   );
