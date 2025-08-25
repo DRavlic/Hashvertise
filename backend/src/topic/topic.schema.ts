@@ -5,6 +5,7 @@ import {
   DEFAULT_CAMPAIGNS_LIMIT,
   MAX_CAMPAIGN_NAME_LENGTH,
   MAX_REQUIREMENT_LENGTH,
+  NUM_OF_CAMPAIGN_MESSAGE_PARTS,
 } from "./topic.constants";
 
 // Schema for setting up a topic listener
@@ -56,7 +57,7 @@ export const campaignVerifySchema = z.object({
           // Extract campaign name and requirement from the message
           // Message format: "txId, topicId, name, accountId, prizePool, requirement, startDate, endDate"
           const parts = message.split(", ");
-          if (parts.length < 8) return false;
+          if (parts.length !== NUM_OF_CAMPAIGN_MESSAGE_PARTS) return false;
 
           const name = parts[2];
           const requirement = parts[5];
