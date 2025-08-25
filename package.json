@@ -20,6 +20,8 @@
   },
   "dependencies": {
     "buffer": "^6.0.3",
+    "media-typer": "^1.1.0",
+    "side-channel": "^1.1.0",
     "stream-browserify": "^3.0.0"
   },
   "resolutions": {
