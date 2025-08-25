@@ -12,7 +12,10 @@ import {
   Campaign,
 } from "./topic.model";
 import logger from "../common/common.instances";
-import { DEFAULT_TOPIC_MESSAGES_LIMIT } from "./topic.constants";
+import {
+  DEFAULT_TOPIC_MESSAGES_LIMIT,
+  CAMPAIGN_START_DATE_BUFFER_MILISECONDS,
+} from "./topic.constants";
 import {
   TopicListenResponse,
   TopicStatusResponse,
@@ -460,9 +463,13 @@ export const parseCampaignMessage = (
       return null;
     }
 
-    if (startDateUtc < createUtcDate()) {
+    // Allow campaigns to start within a reasonable buffer
+    const currentTime = createUtcDate();
+    const bufferTimeAgo = new Date(currentTime.getTime() - CAMPAIGN_START_DATE_BUFFER_MILISECONDS * 60 * 1000);
+
+    if (startDateUtc < bufferTimeAgo) {
       logger.error(
-        `Start date: ${startDateStr} cannot be in the past for campaign`
+        `Start date: ${startDateStr} cannot be more than ${CAMPAIGN_START_DATE_BUFFER_MILISECONDS / 60000} minutes in the past for campaign`
       );
       return null;
     }

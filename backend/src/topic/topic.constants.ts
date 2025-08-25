@@ -10,3 +10,5 @@ export const MAX_REQUIREMENT_LENGTH = 2000;
 
 // Campaign verification message constants
 export const NUM_OF_CAMPAIGN_MESSAGE_PARTS = 8;
+
+export const CAMPAIGN_START_DATE_BUFFER_MILISECONDS = 10 * 60 * 1000; // 10 minutes
