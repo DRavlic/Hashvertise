@@ -62,6 +62,7 @@ export function CreateCampaign() {
   const [campaignCreationReceipt, setCampaignCreationReceipt] =
     useState<CampaignCreationReceipt | null>(null);
   const [prizePoolError, setPrizePoolError] = useState("");
+  const [prizePoolDisplayValue, setPrizePoolDisplayValue] = useState("");
 
   const isPaired = connectionStatus === HashConnectConnectionState.Paired;
 
@@ -100,16 +101,34 @@ export function CreateCampaign() {
   ) => {
     const { name, value } = e.target;
     const isPrizePool = name === "prizePool";
-    const parsedValue = isPrizePool ? parseFloat(value) || 0 : value;
-
-    setFormData({
-      ...formData,
-      [name]: parsedValue,
-    });
 
     if (isPrizePool) {
-      const prizeValue = parsedValue as number;
-      if (config && prizeValue < minimumPrizePoolHbar) {
+      setPrizePoolDisplayValue(value);
+
+      if (value === "") {
+        setFormData({
+          ...formData,
+          [name]: 0,
+        });
+        setPrizePoolError("");
+
+        return;
+      }
+
+      // Update the form data if value is a number, watch out for comma as decimal separator
+      const parsedValue = parseFloat(value.replace(',', '.'));
+
+      if (isNaN(parsedValue)) {
+        return;
+      }
+
+      setFormData({
+        ...formData,
+        [name]: parsedValue,
+      });
+
+      // Validate minimum allowed prize pool
+      if (config && parsedValue < minimumPrizePoolHbar) {
         setPrizePoolError(
           `To meet platform requirements, the prize pool must be at least ~${minimumPrizePoolHbar.toFixed(
             4
@@ -118,6 +137,11 @@ export function CreateCampaign() {
       } else {
         setPrizePoolError("");
       }
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
     }
   };
 
@@ -520,12 +544,10 @@ export function CreateCampaign() {
             Prize Pool (HBAR)
           </label>
           <input
-            type="number"
+            type="text"
             id="prizePool"
             name="prizePool"
-            min="0"
-            step="1"
-            value={formData.prizePool || ""}
+            value={prizePoolDisplayValue}
             onChange={handleChange}
             required
             className="w-full px-4 py-2 border border-secondary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
