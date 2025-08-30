@@ -41,7 +41,10 @@ export function CreateCampaign() {
   const navigate = useNavigate();
   const { connectionStatus, accountId } = useWallet();
 
-  const defaultStartDate = addMinutes(new Date(), DEFAULT_START_TIME_OFFSET_MINUTES);
+  const defaultStartDate = addMinutes(
+    new Date(),
+    DEFAULT_START_TIME_OFFSET_MINUTES
+  );
   defaultStartDate.setSeconds(0, 0);
   const defaultEndDate = addHours(
     new Date(defaultStartDate),
@@ -121,7 +124,7 @@ export function CreateCampaign() {
       }
 
       // Update the form data if value is a number, watch out for comma as decimal separator
-      const parsedValue = parseFloat(value.replace(',', '.'));
+      const parsedValue = parseFloat(value.replace(",", "."));
 
       if (isNaN(parsedValue)) {
         return;
@@ -297,27 +300,41 @@ export function CreateCampaign() {
 
   const handleUseCurrentTime = () => {
     setUseCurrentTimeAsStart(!useCurrentTimeAsStart);
-    if (!useCurrentTimeAsStart) {
-      // Set start date to current time + offset
-      const newStartDate = addMinutes(new Date(), DEFAULT_START_TIME_OFFSET_MINUTES);
 
+    // Looks opposite, but it's correct because this function is called before checkbox is checked
+    // If we use current time as start
+    if (!useCurrentTimeAsStart) {
+      // Set start date to null - we'll set it to current time when submitting
       if (formData.endDate) {
-        // Check if using current time creates a conflict
-        if (isAfterOrEqual(newStartDate, formData.endDate)) {
-          // Set end date to minimum duration after new start date
+        // Check if using current time would create a conflict
+        const currentTime = new Date();
+        if (isAfterOrEqual(currentTime, formData.endDate)) {
+          // Set end date to minimum duration after current time
           const newEndDate = addMinutes(
-            new Date(newStartDate),
+            new Date(currentTime),
             MIN_CAMPAIGN_DURATION_MINUTES
           );
 
           setFormData({
             ...formData,
-            startDate: newStartDate,
+            startDate: null,
             endDate: newEndDate,
           });
           return;
         }
       }
+
+      setFormData({
+        ...formData,
+        startDate: null,
+      });
+    }
+    // If we don't use current time as start
+    else {
+      const newStartDate = addMinutes(
+        new Date(),
+        DEFAULT_START_TIME_OFFSET_MINUTES
+      );
 
       setFormData({
         ...formData,
@@ -334,31 +351,53 @@ export function CreateCampaign() {
       return;
     }
 
-    if (!formData.startDate || !formData.endDate) {
+    if ((!useCurrentTimeAsStart && !formData.startDate) || !formData.endDate) {
       showError("Please set both start and end dates");
       return;
     }
 
+    // If using current time (look at the handleUseCurrentTime function for explanation), validate start date is set
+    // if (!useCurrentTimeAsStart && !formData.startDate) {
+    //   showError("Please set start date");
+    //   return;
+    // }
+
+    // Get the final start date for validation
+    const finalStartDate = useCurrentTimeAsStart
+      ? new Date()
+      : formData.startDate!;
+
     // Validate start date is before end date with full time comparison
-    if (!isBefore(formData.startDate, formData.endDate)) {
+    if (!isBefore(finalStartDate, formData.endDate)) {
       showError("Start date must be before end date");
       return;
     }
 
     // Validate start date is within reasonable buffer time
-    if (!isStartDateWithinBuffer(formData.startDate, CAMPAIGN_START_DATE_BUFFER_MINUTES)) {
-      showError(`Start date cannot be more than ${CAMPAIGN_START_DATE_BUFFER_MINUTES} minutes in the past`);
+    if (
+      !isStartDateWithinBuffer(
+        finalStartDate,
+        CAMPAIGN_START_DATE_BUFFER_MINUTES
+      )
+    ) {
+      showError(
+        `Start date cannot be more than ${CAMPAIGN_START_DATE_BUFFER_MINUTES} minutes in the past`
+      );
       return;
     }
 
     // Validate campaign duration
-    if (!isCampaignDurationValid(
-      formData.startDate,
-      formData.endDate,
-      MIN_CAMPAIGN_DURATION_MINUTES,
-      MAX_CAMPAIGN_DURATION_DAYS
-    )) {
-      showError(`Campaign duration must be between ${MIN_CAMPAIGN_DURATION_MINUTES} minutes and ${MAX_CAMPAIGN_DURATION_DAYS} days`);
+    if (
+      !isCampaignDurationValid(
+        finalStartDate,
+        formData.endDate,
+        MIN_CAMPAIGN_DURATION_MINUTES,
+        MAX_CAMPAIGN_DURATION_DAYS
+      )
+    ) {
+      showError(
+        `Campaign duration must be between ${MIN_CAMPAIGN_DURATION_MINUTES} minutes and ${MAX_CAMPAIGN_DURATION_DAYS} days`
+      );
       return;
     }
 
@@ -445,8 +484,13 @@ export function CreateCampaign() {
         return;
       }
 
+      // Set start date to current time if "Use current time" is selected
+      const finalStartDate = useCurrentTimeAsStart
+        ? new Date()
+        : formData.startDate!;
+
       // Convert dates to UTC for backend
-      const startDateUTC = localToUtc(formData.startDate!);
+      const startDateUTC = localToUtc(finalStartDate);
       const endDateUTC = localToUtc(formData.endDate!);
 
       const message = `${txId}, ${topicId}, ${formData.name}, ${accountId}, ${formData.prizePool}, ${formData.requirement}, ${startDateUTC}, ${endDateUTC}`;
@@ -585,7 +629,7 @@ export function CreateCampaign() {
               htmlFor="startDate"
               className="block text-sm font-medium text-secondary-700"
             >
-              Campaign Start Date and Time
+              Start
             </label>
             <div className="flex items-center">
               <input
@@ -604,73 +648,79 @@ export function CreateCampaign() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label htmlFor="startDateInput" className="sr-only">
-                Start Date
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg
-                    className="h-5 w-5 text-secondary-400"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M6 2C5.44772 2 5 2.44772 5 3V4H4C2.89543 4 2 4.89543 2 6V16C2 17.1046 2.89543 18 4 18H16C17.1046 18 18 17.1046 18 16V6C18 4.89543 17.1046 4 16 4H15V3C15 2.44772 14.5523 2 14 2C13.4477 2 13 2.44772 13 3V4H7V3C7 2.44772 6.55228 2 6 2ZM16 6V16H4V6H16Z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+          {!useCurrentTimeAsStart && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="startDateInput" className="sr-only">
+                  Start Date
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg
+                      className="h-5 w-5 text-secondary-400"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M6 2C5.44772 2 5 2.44772 5 3V4H4C2.89543 4 2 4.89543 2 6V16C2 17.1046 2.89543 18 4 18H16C17.1046 18 18 17.1046 18 16V6C18 4.89543 17.1046 4 16 4H15V3C15 2.44772 14.5523 2 14 2C13.4477 2 13 2.44772 13 3V4H7V3C7 2.44772 6.55228 2 6 2ZM16 6V16H4V6H16Z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <input
+                    type="date"
+                    id="startDateInput"
+                    value={formatDateForDateInput(formData.startDate)}
+                    onChange={(e) =>
+                      handleDateChange("startDate", e.target.value)
+                    }
+                    required={!useCurrentTimeAsStart}
+                    min={getMinStartDate()}
+                    className="pl-10 w-full px-4 py-2 border border-secondary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
                 </div>
-                <input
-                  type="date"
-                  id="startDateInput"
-                  value={formatDateForDateInput(formData.startDate)}
-                  onChange={(e) =>
-                    handleDateChange("startDate", e.target.value)
-                  }
-                  required={!useCurrentTimeAsStart}
-                  min={getMinStartDate()}
-                  disabled={useCurrentTimeAsStart}
-                  className="pl-10 w-full px-4 py-2 border border-secondary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-secondary-100 disabled:text-secondary-500"
-                />
+              </div>
+              <div>
+                <label htmlFor="startTimeInput" className="sr-only">
+                  Start Time
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg
+                      className="h-5 w-5 text-secondary-400"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18ZM11 6C11 5.44772 10.5523 5 10 5C9.44772 5 9 5.44772 9 6V10C9 10.2652 9.10536 10.5196 9.29289 10.7071L12.1213 13.5355C12.5118 13.9261 13.145 13.9261 13.5355 13.5355C13.9261 13.145 13.9261 12.5118 13.5355 12.1213L11 9.58579V6Z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <input
+                    type="time"
+                    id="startTimeInput"
+                    value={formatDateForTimeInput(formData.startDate)}
+                    onChange={(e) =>
+                      handleTimeChange("startTime", e.target.value)
+                    }
+                    required={!useCurrentTimeAsStart}
+                    className="pl-10 w-full px-4 py-2 border border-secondary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
+                </div>
               </div>
             </div>
-            <div>
-              <label htmlFor="startTimeInput" className="sr-only">
-                Start Time
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg
-                    className="h-5 w-5 text-secondary-400"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18ZM11 6C11 5.44772 10.5523 5 10 5C9.44772 5 9 5.44772 9 6V10C9 10.2652 9.10536 10.5196 9.29289 10.7071L12.1213 13.5355C12.5118 13.9261 13.145 13.9261 13.5355 13.5355C13.9261 13.145 13.9261 12.5118 13.5355 12.1213L11 9.58579V6Z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-                <input
-                  type="time"
-                  id="startTimeInput"
-                  value={formatDateForTimeInput(formData.startDate)}
-                  onChange={(e) =>
-                    handleTimeChange("startTime", e.target.value)
-                  }
-                  required={!useCurrentTimeAsStart}
-                  disabled={useCurrentTimeAsStart}
-                  className="pl-10 w-full px-4 py-2 border border-secondary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-secondary-100 disabled:text-secondary-500"
-                />
-              </div>
+          )}
+
+          {useCurrentTimeAsStart && (
+            <div className="p-3 bg-primary-50 border border-primary-200 rounded-md text-primary-700 text-sm">
+              Campaign will start immediately when created
             </div>
-          </div>
+          )}
         </div>
 
         <div>
@@ -678,7 +728,7 @@ export function CreateCampaign() {
             htmlFor="endDate"
             className="block text-sm font-medium text-secondary-700 mb-1"
           >
-            Campaign End Date and Time
+            End
           </label>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -706,7 +756,9 @@ export function CreateCampaign() {
                   value={formatDateForDateInput(formData.endDate)}
                   onChange={(e) => handleDateChange("endDate", e.target.value)}
                   required
-                  min={getMinEndDate(formData.startDate)}
+                  min={getMinEndDate(
+                    useCurrentTimeAsStart ? new Date() : formData.startDate
+                  )}
                   className="pl-10 w-full px-4 py-2 border border-secondary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
@@ -738,7 +790,7 @@ export function CreateCampaign() {
                   required
                   min={
                     getMinEndTime(
-                      formData.startDate,
+                      useCurrentTimeAsStart ? new Date() : formData.startDate,
                       formData.endDate,
                       MIN_CAMPAIGN_DURATION_MINUTES
                     ) || undefined
@@ -749,7 +801,8 @@ export function CreateCampaign() {
             </div>
           </div>
           <p className="mt-1 text-xs text-secondary-500">
-            Campaign duration must be between {MIN_CAMPAIGN_DURATION_MINUTES} minutes and {MAX_CAMPAIGN_DURATION_DAYS} days
+            Campaign duration must be between {MIN_CAMPAIGN_DURATION_MINUTES}{" "}
+            minutes and {MAX_CAMPAIGN_DURATION_DAYS} days
           </p>
         </div>
 
