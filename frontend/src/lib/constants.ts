@@ -25,6 +25,9 @@ export const MAX_CAMPAIGN_DURATION_DAYS = 30;
 export const MAX_CAMPAIGN_NAME_LENGTH = 40;
 export const MAX_REQUIREMENT_LENGTH = 2000;
 
+// Prize pool constants
+export const MAX_PRIZE_POOL_HBAR = 10000000000; // 10 billion HBAR
+
 // Campaign completion message constant (must match backend)
 export const CAMPAIGN_COMPLETION_MESSAGE_PREFIX = "Campaign over for topic";
 

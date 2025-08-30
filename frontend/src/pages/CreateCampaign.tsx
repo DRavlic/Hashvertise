@@ -123,10 +123,24 @@ export function CreateCampaign() {
         return;
       }
 
-      // Update the form data if value is a number, watch out for comma as decimal separator
-      const parsedValue = parseFloat(value.replace(",", "."));
+      // Check if the entire string is a valid number (allows comma as decimal separator)
+      const normalizedValue = value.replace(",", ".");
+
+      // Check if the entire string matches a valid number pattern
+      if (!/^\d*\.?\d*$/.test(normalizedValue)) {
+        setPrizePoolError("Please enter a valid number");
+        return;
+      }
+
+      const parsedValue = parseFloat(normalizedValue);
 
       if (isNaN(parsedValue)) {
+        setPrizePoolError("Please enter a valid number");
+        return;
+      }
+
+      if (parsedValue < 0) {
+        setPrizePoolError("Prize pool cannot be negative");
         return;
       }
 
@@ -415,6 +429,11 @@ export function CreateCampaign() {
       return;
     }
 
+    if (prizePoolError) {
+      showError(prizePoolError);
+      return;
+    }
+
     // Validate requirement
     if (!formData.requirement) {
       showError("Please set a requirement before creating the campaign.");
@@ -615,11 +634,15 @@ export function CreateCampaign() {
             value={prizePoolDisplayValue}
             onChange={handleChange}
             required
-            className="w-full px-4 py-2 border border-secondary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:border-transparent ${
+              prizePoolError
+                ? "border-red-300 focus:ring-red-500"
+                : "border-secondary-300 focus:ring-primary-500"
+            }`}
             placeholder="Enter prize amount in HBAR"
           />
           {prizePoolError && (
-            <p className="mt-1 text-xs text-warning-700">{prizePoolError}</p>
+            <p className="mt-1 text-xs text-red-700">{prizePoolError}</p>
           )}
         </div>
 
