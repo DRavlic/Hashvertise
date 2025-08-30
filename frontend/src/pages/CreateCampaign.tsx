@@ -13,6 +13,7 @@ import {
   getMinStartDate,
   getMinEndDate,
   getMinEndTime,
+  isStartDateWithinBuffer,
 } from "../lib/date";
 import { isBefore, addHours, addMinutes } from "date-fns";
 import {
@@ -21,6 +22,8 @@ import {
   MAX_CAMPAIGN_NAME_LENGTH,
   MAX_REQUIREMENT_LENGTH,
   BASIS_POINTS_DIVISOR,
+  DEFAULT_START_TIME_OFFSET_MINUTES,
+  CAMPAIGN_START_DATE_BUFFER_MINUTES,
 } from "../lib/constants";
 import {
   CampaignFormData,
@@ -36,7 +39,7 @@ export function CreateCampaign() {
   const navigate = useNavigate();
   const { connectionStatus, accountId } = useWallet();
 
-  const defaultStartDate = new Date();
+  const defaultStartDate = addMinutes(new Date(), DEFAULT_START_TIME_OFFSET_MINUTES);
   defaultStartDate.setSeconds(0, 0);
   const defaultEndDate = addHours(
     new Date(defaultStartDate),
@@ -293,22 +296,21 @@ export function CreateCampaign() {
   const handleUseCurrentTime = () => {
     setUseCurrentTimeAsStart(!useCurrentTimeAsStart);
     if (!useCurrentTimeAsStart) {
-      // Round the current time to the nearest minute, removing seconds
-      const now = new Date();
-      now.setSeconds(0, 0);
+      // Set start date to 1 minute from now
+      const newStartDate = addMinutes(new Date(), 1);
 
       if (formData.endDate) {
         // Check if using current time creates a conflict
-        if (isAfterOrEqual(now, formData.endDate)) {
+        if (isAfterOrEqual(newStartDate, formData.endDate)) {
           // Set end date to 1 minute after current time
           const newEndDate = addMinutes(
-            new Date(now),
+            new Date(newStartDate),
             START_TO_END_TIME_DIFF_MINUTES
           );
 
           setFormData({
             ...formData,
-            startDate: now,
+            startDate: newStartDate,
             endDate: newEndDate,
           });
           return;
@@ -317,7 +319,7 @@ export function CreateCampaign() {
 
       setFormData({
         ...formData,
-        startDate: now,
+        startDate: newStartDate,
       });
     }
   };
@@ -338,6 +340,12 @@ export function CreateCampaign() {
     // Validate start date is before end date with full time comparison
     if (!isBefore(formData.startDate, formData.endDate)) {
       showError("Start date must be before end date");
+      return;
+    }
+
+    // Validate start date is within reasonable buffer time
+    if (!isStartDateWithinBuffer(formData.startDate, CAMPAIGN_START_DATE_BUFFER_MINUTES)) {
+      showError(`Start date cannot be more than ${CAMPAIGN_START_DATE_BUFFER_MINUTES} minutes in the past`);
       return;
     }
 

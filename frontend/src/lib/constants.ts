@@ -34,3 +34,7 @@ export const HASHSCAN_URLS = {
 // Fee calculator constants
 export const TINYBARS_PER_HBAR = 100_000_000;
 export const BASIS_POINTS_DIVISOR = 10_000;
+
+// Campaign start time constants
+export const DEFAULT_START_TIME_OFFSET_MINUTES = 10;
+export const CAMPAIGN_START_DATE_BUFFER_MINUTES = 10;

@@ -251,6 +251,22 @@ export function formatCountdown(targetDate: Date): string {
 }
 
 /**
+ * Checks if a start date is within the specified buffer time from now
+ *
+ * @param startDate - The start date to check
+ * @param bufferMinutes - Buffer time in minutes
+ * @returns Boolean indicating if the start date is within the buffer time
+ */
+export function isStartDateWithinBuffer(
+  startDate: Date,
+  bufferMinutes: number
+): boolean {
+  const currentTime = new Date();
+  const bufferTimeAgo = new Date(currentTime.getTime() - bufferMinutes * 60 * 1000);
+  return startDate >= bufferTimeAgo;
+}
+
+/**
  * Get full campaign status information including status indicator and time display
  *
  * @param startDate - Campaign start date in UTC
