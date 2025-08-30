@@ -267,6 +267,26 @@ export function isStartDateWithinBuffer(
 }
 
 /**
+ * Checks if campaign duration is within the allowed range
+ *
+ * @param startDate - The campaign start date
+ * @param endDate - The campaign end date
+ * @param minDurationMinutes - Minimum duration in minutes
+ * @param maxDurationDays - Maximum duration in days
+ * @returns Boolean indicating if the duration is valid
+ */
+export function isCampaignDurationValid(
+  startDate: Date,
+  endDate: Date,
+  minDurationMinutes: number,
+  maxDurationDays: number
+): boolean {
+  const durationMinutes = Math.floor((endDate.getTime() - startDate.getTime()) / 1000 / 60); // Convert milliseconds to minutes
+
+  return durationMinutes >= minDurationMinutes && durationMinutes <= maxDurationDays * 24 * 60;
+}
+
+/**
  * Get full campaign status information including status indicator and time display
  *
  * @param startDate - Campaign start date in UTC

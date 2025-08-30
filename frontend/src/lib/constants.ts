@@ -15,8 +15,11 @@ export const X_HANDLE_INPUT_DELAY_MS = 700; // 0.7 seconds
 export const TOAST_DURATION_MS = 3000; // 3 seconds
 export const COUNTDOWN_REFRESH_INTERVAL_MS = 60000; // 1 minute
 export const DEFAULT_START_TO_END_TIME_DIFF_HOURS = 12; // only set at the rendering of the CreateCampaign page
-export const START_TO_END_TIME_DIFF_MINUTES = 1;
 export const DEBOUNCE_DELAY_MS = 500; // 0.5 seconds
+export const DEFAULT_START_TIME_OFFSET_MINUTES = 10;
+export const CAMPAIGN_START_DATE_BUFFER_MINUTES = 10;
+export const MIN_CAMPAIGN_DURATION_MINUTES = 5;
+export const MAX_CAMPAIGN_DURATION_DAYS = 30;
 
 // Input length constraints
 export const MAX_CAMPAIGN_NAME_LENGTH = 40;
@@ -34,7 +37,3 @@ export const HASHSCAN_URLS = {
 // Fee calculator constants
 export const TINYBARS_PER_HBAR = 100_000_000;
 export const BASIS_POINTS_DIVISOR = 10_000;
-
-// Campaign start time constants
-export const DEFAULT_START_TIME_OFFSET_MINUTES = 10;
-export const CAMPAIGN_START_DATE_BUFFER_MINUTES = 10;

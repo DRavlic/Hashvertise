@@ -14,16 +14,18 @@ import {
   getMinEndDate,
   getMinEndTime,
   isStartDateWithinBuffer,
+  isCampaignDurationValid,
 } from "../lib/date";
 import { isBefore, addHours, addMinutes } from "date-fns";
 import {
-  START_TO_END_TIME_DIFF_MINUTES,
   DEFAULT_START_TO_END_TIME_DIFF_HOURS,
   MAX_CAMPAIGN_NAME_LENGTH,
   MAX_REQUIREMENT_LENGTH,
   BASIS_POINTS_DIVISOR,
   DEFAULT_START_TIME_OFFSET_MINUTES,
   CAMPAIGN_START_DATE_BUFFER_MINUTES,
+  MIN_CAMPAIGN_DURATION_MINUTES,
+  MAX_CAMPAIGN_DURATION_DAYS,
 } from "../lib/constants";
 import {
   CampaignFormData,
@@ -173,10 +175,10 @@ export function CreateCampaign() {
         if (formData.endDate) {
           // Check if new start date creates a conflict
           if (isAfterOrEqual(newDate, formData.endDate)) {
-            // Set end date to 1 minute after new start date
+            // Set end date to minimum duration after new start date
             const newEndDate = addMinutes(
               new Date(newDate),
-              START_TO_END_TIME_DIFF_MINUTES
+              MIN_CAMPAIGN_DURATION_MINUTES
             );
 
             setFormData({
@@ -198,10 +200,10 @@ export function CreateCampaign() {
         if (formData.startDate) {
           // Check if new end date creates a conflict
           if (isAfterOrEqual(formData.startDate, newDate)) {
-            // Set end date to 1 minute after start date
+            // Set end date to minimum duration after start date
             const newEndDate = addMinutes(
               new Date(formData.startDate),
-              START_TO_END_TIME_DIFF_MINUTES
+              MIN_CAMPAIGN_DURATION_MINUTES
             );
 
             setFormData({
@@ -247,10 +249,10 @@ export function CreateCampaign() {
         if (formData.endDate) {
           // Check if the new start time creates a conflict
           if (isAfterOrEqual(newDate, formData.endDate)) {
-            // Set end date to 1 minute after new start date
+            // Set end date to minimum duration after new start date
             const newEndDate = addMinutes(
               new Date(newDate),
-              START_TO_END_TIME_DIFF_MINUTES
+              MIN_CAMPAIGN_DURATION_MINUTES
             );
 
             setFormData({
@@ -271,10 +273,10 @@ export function CreateCampaign() {
         if (formData.startDate) {
           // Check if the new end time creates a conflict
           if (isAfterOrEqual(formData.startDate, newDate)) {
-            // Set end date to 1 minute after start date
+            // Set end date to minimum duration after start date
             const newEndDate = addMinutes(
               new Date(formData.startDate),
-              START_TO_END_TIME_DIFF_MINUTES
+              MIN_CAMPAIGN_DURATION_MINUTES
             );
 
             setFormData({
@@ -296,16 +298,16 @@ export function CreateCampaign() {
   const handleUseCurrentTime = () => {
     setUseCurrentTimeAsStart(!useCurrentTimeAsStart);
     if (!useCurrentTimeAsStart) {
-      // Set start date to 1 minute from now
-      const newStartDate = addMinutes(new Date(), 1);
+      // Set start date to current time + offset
+      const newStartDate = addMinutes(new Date(), DEFAULT_START_TIME_OFFSET_MINUTES);
 
       if (formData.endDate) {
         // Check if using current time creates a conflict
         if (isAfterOrEqual(newStartDate, formData.endDate)) {
-          // Set end date to 1 minute after current time
+          // Set end date to minimum duration after new start date
           const newEndDate = addMinutes(
             new Date(newStartDate),
-            START_TO_END_TIME_DIFF_MINUTES
+            MIN_CAMPAIGN_DURATION_MINUTES
           );
 
           setFormData({
@@ -346,6 +348,17 @@ export function CreateCampaign() {
     // Validate start date is within reasonable buffer time
     if (!isStartDateWithinBuffer(formData.startDate, CAMPAIGN_START_DATE_BUFFER_MINUTES)) {
       showError(`Start date cannot be more than ${CAMPAIGN_START_DATE_BUFFER_MINUTES} minutes in the past`);
+      return;
+    }
+
+    // Validate campaign duration
+    if (!isCampaignDurationValid(
+      formData.startDate,
+      formData.endDate,
+      MIN_CAMPAIGN_DURATION_MINUTES,
+      MAX_CAMPAIGN_DURATION_DAYS
+    )) {
+      showError(`Campaign duration must be between ${MIN_CAMPAIGN_DURATION_MINUTES} minutes and ${MAX_CAMPAIGN_DURATION_DAYS} days`);
       return;
     }
 
@@ -727,7 +740,7 @@ export function CreateCampaign() {
                     getMinEndTime(
                       formData.startDate,
                       formData.endDate,
-                      START_TO_END_TIME_DIFF_MINUTES
+                      MIN_CAMPAIGN_DURATION_MINUTES
                     ) || undefined
                   }
                   className="pl-10 w-full px-4 py-2 border border-secondary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
@@ -736,7 +749,7 @@ export function CreateCampaign() {
             </div>
           </div>
           <p className="mt-1 text-xs text-secondary-500">
-            End date must be after the start date
+            Campaign duration must be between {MIN_CAMPAIGN_DURATION_MINUTES} minutes and {MAX_CAMPAIGN_DURATION_DAYS} days
           </p>
         </div>
 

@@ -15,6 +15,8 @@ import logger from "../common/common.instances";
 import {
   DEFAULT_TOPIC_MESSAGES_LIMIT,
   CAMPAIGN_START_DATE_BUFFER_MILISECONDS,
+  MIN_CAMPAIGN_DURATION_MINUTES,
+  MAX_CAMPAIGN_DURATION_MINUTES,
 } from "./topic.constants";
 import {
   TopicListenResponse,
@@ -470,6 +472,23 @@ export const parseCampaignMessage = (
     if (startDateUtc < bufferTimeAgo) {
       logger.error(
         `Start date: ${startDateStr} cannot be more than ${CAMPAIGN_START_DATE_BUFFER_MILISECONDS / 60000} minutes in the past for campaign`
+      );
+      return null;
+    }
+
+    // Validate campaign duration
+    const durationMinutes = Math.floor((endDateUtc.getTime() - startDateUtc.getTime()) / 1000 / 60); // Convert milliseconds to minutes
+
+    if (durationMinutes < MIN_CAMPAIGN_DURATION_MINUTES) {
+      logger.error(
+        `Campaign duration is less than minimum allowed duration of ${MIN_CAMPAIGN_DURATION_MINUTES} minutes`
+      );
+      return null;
+    }
+
+    if (durationMinutes > MAX_CAMPAIGN_DURATION_MINUTES) {
+      logger.error(
+        `Campaign duration is greater than maximum allowed duration of ${MAX_CAMPAIGN_DURATION_MINUTES / 24 / 60} days`
       );
       return null;
     }
