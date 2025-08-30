@@ -465,7 +465,7 @@ export const parseCampaignMessage = (
 
     // Allow campaigns to start within a reasonable buffer
     const currentTime = createUtcDate();
-    const bufferTimeAgo = new Date(currentTime.getTime() - CAMPAIGN_START_DATE_BUFFER_MILISECONDS * 60 * 1000);
+    const bufferTimeAgo = new Date(currentTime.getTime() - CAMPAIGN_START_DATE_BUFFER_MILISECONDS);
 
     if (startDateUtc < bufferTimeAgo) {
       logger.error(
