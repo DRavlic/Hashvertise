@@ -8,7 +8,7 @@ import { initializeTopicListeners } from "./topic/topic.service";
 // Connect to MongoDB and start the server
 const main = async () => {
   try {
-    await mongoose.connect(DB);
+    // await mongoose.connect(DB);
     logger.info("Connected to MongoDB successfully");
 
     // Initialize active topic listeners from database
