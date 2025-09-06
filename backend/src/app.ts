@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import { errorHandler } from "./common/common.middleware";
 import { hederaClient } from "./common/common.hedera";
+import commonRoutes from "./common/common.routes";
 import topicRoutes from "./topic/topic.routes";
 import xRoutes from "./x/x.routes";
 import userRoutes from "./user/user.routes";
@@ -31,6 +32,7 @@ app.get("/", (req: Request, res: Response) => {
 initCronJobs();
 
 // Register routes
+app.use("/api", commonRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/topic", topicRoutes);
 app.use("/api/x", xRoutes);
