@@ -403,8 +403,8 @@ let hederaClient: Client;
 try {
   hederaClient = initializeHederaClient();
   logger.info("Hedera client initialized successfully");
-} catch (error) {
-  logger.error("Failed to initialize Hedera client:", error);
+} catch (error: any) {
+  logger.error({ err: error }, `Failed to initialize Hedera client: ${error.message}`);
   process.exit(1);
 }
 
