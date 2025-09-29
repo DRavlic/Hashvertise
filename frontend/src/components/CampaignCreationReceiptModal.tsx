@@ -1,6 +1,7 @@
 import { CampaignCreationReceipt } from "../lib/interfaces";
 import { formatFeePercentage } from "../lib/campaign-receipt";
 import { formatHbar } from "../lib/hbar-utils";
+import { formatUtcDateTime } from "../lib/date";
 
 interface CampaignCreationReceiptModalProps {
   isOpen: boolean;
@@ -49,6 +50,26 @@ export function CampaignCreationReceiptModal({
 
         {receipt ? (
           <div className="space-y-4">
+            <div className="bg-slate-50 rounded-lg px-4 py-2 border border-slate-200">
+              <div className="flex justify-between items-center py-2 border-b border-slate-200 last:border-b-0">
+                <span className="text-sm text-slate-600 font-semibold">
+                  Start:
+                </span>
+                <span className="text-sm text-slate-800 font-medium">
+                  {formatUtcDateTime(receipt.startDate.toISOString())}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center py-2">
+                <span className="text-sm text-slate-600 font-semibold">
+                  End:
+                </span>
+                <span className="text-sm text-slate-800 font-medium">
+                  {formatUtcDateTime(receipt.endDate.toISOString())}
+                </span>
+              </div>
+            </div>
+
             <div className="bg-secondary-50 rounded-lg p-4 space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium text-secondary-700">

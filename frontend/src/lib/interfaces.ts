@@ -99,4 +99,6 @@ export interface CampaignCreationReceipt {
   totalAmountHbar: number; // Total amount to be paid in HBAR
   feeBasisPoints: number; // Fee rate in basis points
   isAboveMinimum: boolean; // Whether total amount meets minimum deposit
+  startDate: Date; // Campaign start date
+  endDate: Date; // Campaign end date
 }

@@ -7,7 +7,9 @@ import { BASIS_POINTS_DIVISOR } from "./constants";
  */
 export const getCampaignCreationReceipt = (
   prizeAmountHbar: number,
-  config: HashvertiseConfig
+  config: HashvertiseConfig,
+  startDate: Date,
+  endDate: Date
 ): CampaignCreationReceipt => {
   const prizeAmountTinybars = hbarToTinybars(prizeAmountHbar);
   const feeAmountTinybars = Math.floor(
@@ -21,6 +23,8 @@ export const getCampaignCreationReceipt = (
     totalAmountHbar: tinybarsToHbar(totalAmountTinybars),
     feeBasisPoints: config.feeBasisPoints,
     isAboveMinimum: totalAmountTinybars >= config.minimumDepositInTinybars,
+    startDate,
+    endDate,
   };
 };
 

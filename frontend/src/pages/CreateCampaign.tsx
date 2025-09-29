@@ -441,7 +441,12 @@ export function CreateCampaign() {
     }
 
     // Calculate fees and validate minimum deposit
-    const receipt = getCampaignCreationReceipt(formData.prizePool, config);
+    const receipt = getCampaignCreationReceipt(
+      formData.prizePool,
+      config,
+      formData.startDate!,
+      formData.endDate!
+    );
     setCampaignCreationReceipt(receipt);
 
     // Show the fee confirmation modal
