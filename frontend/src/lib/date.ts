@@ -227,27 +227,48 @@ export function getCampaignStatus(
 }
 
 /**
- * Formats a duration into a readable countdown format (1d 04h 22m)
+ * Formats a duration into a readable countdown format (1d 04h 22m 30s)
  *
  * @param targetDate - The target date to count down to
- * @returns Formatted string showing days, hours, and minutes remaining
+ * @returns Formatted string showing days, hours, minutes, and seconds remaining
  */
 export function formatCountdown(targetDate: Date): string {
   const now = new Date();
   const diff = differenceInMilliseconds(targetDate, now);
 
   if (diff <= 0) {
-    return "0d 00h 00m";
+    return "0s";
   }
 
-  // Calculate days, hours, minutes
+  // Calculate days, hours, minutes, and seconds
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-  return `${days}d ${hours.toString().padStart(2, "0")}h ${minutes
-    .toString()
-    .padStart(2, "0")}m`;
+  const parts: string[] = [];
+
+  // Only show days if non-zero
+  if (days > 0) {
+    parts.push(`${days}d`);
+    parts.push(`${hours.toString().padStart(2, "0")}h`);
+    parts.push(`${minutes.toString().padStart(2, "0")}m`);
+    parts.push(`${seconds.toString().padStart(2, "0")}s`);
+  } else if (hours > 0) {
+    // Show hours and below if days is zero but hours is non-zero
+    parts.push(`${hours}h`);
+    parts.push(`${minutes.toString().padStart(2, "0")}m`);
+    parts.push(`${seconds.toString().padStart(2, "0")}s`);
+  } else if (minutes > 0) {
+    // Show minutes and seconds if both days and hours are zero but minutes is non-zero
+    parts.push(`${minutes}m`);
+    parts.push(`${seconds.toString().padStart(2, "0")}s`);
+  } else {
+    // Only show seconds if everything else is zero
+    parts.push(`${seconds}s`);
+  }
+
+  return parts.join(" ");
 }
 
 /**
