@@ -14,7 +14,7 @@ import {
   verifyAdvertiserDeposit,
 } from "./topic.service";
 import logger from "../common/common.instances";
-import { scheduleCampaignEndProcessing } from "../cron/cron.scheduler";
+import { scheduleCampaignEndProcessing } from "../scheduler/scheduler.manager";
 import {
   DEFAULT_TOPIC_MESSAGES_LIMIT,
   DEFAULT_PAGE,

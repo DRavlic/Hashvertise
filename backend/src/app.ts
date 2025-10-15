@@ -6,7 +6,7 @@ import topicRoutes from "./topic/topic.routes";
 import xRoutes from "./x/x.routes";
 import userRoutes from "./user/user.routes";
 import hashvertiseRoutes from "./hashvertise/hashvertise.routes";
-import { initCronJobs } from "./cron/cron.scheduler";
+import { initScheduler } from "./scheduler/scheduler.manager";
 
 // Create Express app
 const app = express();
@@ -27,8 +27,8 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Welcome to Hashvertise backend!");
 });
 
-// Initialize cron jobs
-initCronJobs();
+// Initialize scheduler
+initScheduler();
 
 // Register routes
 app.use("/api/user", userRoutes);
