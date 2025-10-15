@@ -14,6 +14,7 @@ import {
   verifyAdvertiserDeposit,
 } from "./topic.service";
 import logger from "../common/common.instances";
+import { scheduleCampaignEndProcessing } from "../cron/cron.scheduler";
 import {
   DEFAULT_TOPIC_MESSAGES_LIMIT,
   DEFAULT_PAGE,
@@ -213,6 +214,9 @@ export const verifyCampaignAndCreate = async (
         details: createResult.error,
       });
     }
+
+    // Schedule the campaign end processing
+    scheduleCampaignEndProcessing(campaignData.topicId, campaignData.endDateUtc);
 
     // Set up the topic listener (we're sure the topic exists at this point because we verified it earlier)
     const listenerResult = await setupHederaTopicListenerService(
