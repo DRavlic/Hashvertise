@@ -1,5 +1,5 @@
 import cron from "node-cron";
-import { processEndedCampaigns } from "./cron.service";
+import { processSpecificCampaign, processEndedCampaignsFallback } from "./cron.service";
 import { PROCESS_ENDED_CAMPAIGNS_SCHEDULE_FALLBACK } from "./cron.constants";
 import logger from "../common/common.instances";
 
@@ -16,7 +16,7 @@ export const scheduleCampaignEndProcessing = (topicId: string, endDateUtc: Date)
   // If campaign has already ended, process it immediately
   if (timeUntilEnd <= 0) {
     logger.info(`CRON: Campaign ${topicId} has already ended, processing immediately`);
-    processEndedCampaigns();
+    processSpecificCampaign(topicId);
     return;
   }
 
@@ -29,7 +29,7 @@ export const scheduleCampaignEndProcessing = (topicId: string, endDateUtc: Date)
   const job = setTimeout(async () => {
     logger.info(`CRON: Campaign ${topicId} has ended, processing rewards...`);
     try {
-      await processEndedCampaigns();
+      await processSpecificCampaign(topicId);
       scheduledCampaignJobs.delete(topicId);
     } catch (error) {
       logger.error(`CRON: Error processing campaign ${topicId}:`, error);
@@ -74,7 +74,7 @@ export const initCronJobs = () => {
   cron.schedule(PROCESS_ENDED_CAMPAIGNS_SCHEDULE_FALLBACK, async () => {
     logger.info("CRON: Running hourly fallback check for ended campaigns...");
     try {
-      await processEndedCampaigns();
+      await processEndedCampaignsFallback();
     } catch (error) {
       logger.error(
         "CRON: An unexpected error occurred during the fallback cron job execution.",
@@ -83,9 +83,9 @@ export const initCronJobs = () => {
     }
   });
 
-  // Immediately run the job on startup to process any campaigns that ended while the server was offline.
-  logger.info("CRON: Running startup check for ended campaigns...");
-  processEndedCampaigns();
+  // Immediately run the fallback check on startup to process any campaigns that ended while the server was offline.
+  logger.info("CRON: Running startup fallback check for ended campaigns...");
+  processEndedCampaignsFallback();
 
   // Initialize scheduled campaigns
   initializeScheduledCampaigns();
