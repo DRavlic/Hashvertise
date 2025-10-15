@@ -271,11 +271,11 @@ export const distributeReward = async (
     const resultString =
       distributionEntries.length > 0
         ? distributionEntries
-            .map(
-              ([accountId, rewardBigNum]) =>
-                `${accountId}:${rewardBigNum.toFixed()}`
-            )
-            .join(";")
+          .map(
+            ([accountId, rewardBigNum]) =>
+              `${accountId}:${rewardBigNum.toFixed()}`
+          )
+          .join(";")
         : "No valid applications found";
 
     logger.info(`Distribution results: ${resultString}`);
@@ -372,15 +372,23 @@ export const distributeReward = async (
     );
 
     // After successful distribution, save results to campaign
-    if (distributionEntries.length > 0 && campaign) {
+    if (campaign) {
+      const updateData: any = {};
+
+      if (distributionEntries.length > 0) {
+        // There are valid applications and distributions
+        updateData.results = results;
+        updateData.resultTxId = txId;
+        updateData.noValidApplications = false;
+      } else {
+        // No valid applications found
+        updateData.noValidApplications = true;
+        updateData.results = [];
+      }
+
       await CampaignModel.findOneAndUpdate(
         { topicId },
-        {
-          $set: {
-            results,
-            resultTxId: txId,
-          },
-        },
+        { $set: updateData },
         { new: true }
       );
     }

@@ -440,11 +440,16 @@ export function CreateCampaign() {
       return;
     }
 
+    // Determine the actual start date to use for the receipt
+    const actualStartDate = useCurrentTimeAsStart
+      ? new Date()
+      : formData.startDate!;
+
     // Calculate fees and validate minimum deposit
     const receipt = getCampaignCreationReceipt(
       formData.prizePool,
       config,
-      formData.startDate!,
+      actualStartDate,
       formData.endDate!
     );
     setCampaignCreationReceipt(receipt);

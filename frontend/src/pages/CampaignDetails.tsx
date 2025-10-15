@@ -18,7 +18,6 @@ import {
   TopicMessage,
   CampaignStatus,
   SubmissionStep,
-  CampaignResultEntry,
 } from "../lib/interfaces";
 import { StatusBadge } from "../components/StatusBadge";
 import { DateInfoBox } from "../components/DateInfoBox";
@@ -43,8 +42,6 @@ export function CampaignDetails() {
     typeof getCampaignStatusInfo
   > | null>(null);
   const [showResultsModal, setShowResultsModal] = useState(false);
-  const [results, setResults] = useState<CampaignResultEntry[]>([]);
-  const [isLoadingResults, setIsLoadingResults] = useState(false);
 
   const isPaired = connectionStatus === HashConnectConnectionState.Paired;
 
@@ -80,7 +77,7 @@ export function CampaignDetails() {
     return "";
   };
 
-  // Update campaign status periodically
+  // Update campaign status periodically and refresh campaign data when needed
   useEffect(() => {
     if (!campaign?.startDateUtc || !campaign?.endDateUtc) return;
 
@@ -90,14 +87,50 @@ export function CampaignDetails() {
       );
     };
 
-    // Initial update
-    updateStatus();
+    // Enhanced update function that also refreshes campaign data when needed
+    const updateStatusAndCampaign = async () => {
+      // Always update status
+      updateStatus();
 
-    // Update every minute to keep timers accurate
-    const interval = setInterval(updateStatus, COUNTDOWN_REFRESH_INTERVAL_MS);
+      // If campaign has ended but rewards not distributed, refresh campaign data
+      const currentStatus = getCampaignStatusInfo(
+        campaign.startDateUtc,
+        campaign.endDateUtc
+      );
+      if (
+        currentStatus.status === CampaignStatus.ENDED &&
+        !campaign.rewardsDistributed
+      ) {
+        try {
+          const response = await fetch(
+            API_ENDPOINTS.GET_CAMPAIGN(campaign.topicId)
+          );
+          const data = await response.json();
+          if (data.campaign) {
+            setCampaign(data.campaign);
+          }
+        } catch (error) {
+          console.error("Error refreshing campaign data:", error);
+        }
+      }
+    };
+
+    // Initial update
+    updateStatusAndCampaign();
+
+    // Update every second to keep timers accurate and check for results
+    const interval = setInterval(
+      updateStatusAndCampaign,
+      COUNTDOWN_REFRESH_INTERVAL_MS
+    );
 
     return () => clearInterval(interval);
-  }, [campaign?.startDateUtc, campaign?.endDateUtc]);
+  }, [
+    campaign?.startDateUtc,
+    campaign?.endDateUtc,
+    campaign?.rewardsDistributed,
+    campaign?.topicId,
+  ]);
 
   useEffect(() => {
     // Delay showing the form to prevent flashing
@@ -151,20 +184,6 @@ export function CampaignDetails() {
 
     fetchCampaignData();
   }, [topicId, refreshTrigger]);
-
-  // Fetch results when modal is opened
-  useEffect(() => {
-    if (showResultsModal && campaign) {
-      setIsLoadingResults(true);
-      fetch(API_ENDPOINTS.GET_CAMPAIGN_RESULTS(campaign.topicId))
-        .then((res) => res.json())
-        .then((data) => {
-          setResults(data.results || []);
-        })
-        .catch(() => setResults([]))
-        .finally(() => setIsLoadingResults(false));
-    }
-  }, [showResultsModal, campaign]);
 
   const handleApply = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -282,6 +301,9 @@ export function CampaignDetails() {
 
   // Check if user should be able to apply (only for active campaigns)
   const canApply = campaignStatusInfo?.status === CampaignStatus.ACTIVE;
+  const isProcessingResults =
+    campaignStatusInfo?.status === CampaignStatus.ENDED &&
+    !campaign?.rewardsDistributed;
   const canSeeResults =
     campaignStatusInfo?.status === CampaignStatus.ENDED &&
     campaign?.rewardsDistributed;
@@ -468,7 +490,37 @@ export function CampaignDetails() {
               )}
             </div>
 
-            {canSeeResults && (
+            {isProcessingResults && (
+              <div className="mb-6">
+                <button
+                  disabled
+                  className="px-4 py-2 bg-secondary-400 text-white font-medium rounded-md cursor-not-allowed flex items-center justify-center"
+                >
+                  <svg
+                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Processing Results...
+                </button>
+              </div>
+            )}
+
+            {canSeeResults && !isProcessingResults && (
               <div className="mb-6">
                 <button
                   onClick={() => setShowResultsModal(true)}
@@ -518,9 +570,9 @@ export function CampaignDetails() {
       <ResultsModal
         isOpen={showResultsModal}
         onClose={() => setShowResultsModal(false)}
-        results={results}
-        isLoading={isLoadingResults}
-        resultTxId={campaign.resultTxId || ""}
+        results={campaign?.results || []}
+        resultTxId={campaign?.resultTxId || ""}
+        noValidApplications={campaign?.noValidApplications}
       />
     </div>
   );

@@ -84,6 +84,9 @@ export class Campaign {
   @prop({ required: false })
   public resultTxId?: string;
 
+  @prop({ required: false, default: false })
+  public noValidApplications?: boolean;
+
   @prop({
     type: () => [Object],
     default: [],

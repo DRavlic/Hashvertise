@@ -6,16 +6,16 @@ interface ResultsModalProps {
   isOpen: boolean;
   onClose: () => void;
   results: CampaignResultEntry[];
-  isLoading: boolean;
   resultTxId: string;
+  noValidApplications?: boolean;
 }
 
 export function ResultsModal({
   isOpen,
   onClose,
   results,
-  isLoading,
   resultTxId,
+  noValidApplications,
 }: ResultsModalProps) {
   if (!isOpen) return null;
 
@@ -53,13 +53,15 @@ export function ResultsModal({
             View transaction on Hashscan
           </a>
         )}
-        {isLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-          </div>
-        ) : results.length === 0 ? (
+        {noValidApplications ? (
           <div className="text-center text-secondary-600 py-8">
-            Results are being processed. Please check back soon.
+            <p className="text-lg font-medium text-secondary-900 mb-2">
+              No Valid Applications
+            </p>
+            <p className="text-sm">
+              This campaign received no valid applications that met the
+              requirements.
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto max-h-96 overflow-y-auto">

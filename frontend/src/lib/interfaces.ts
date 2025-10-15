@@ -51,6 +51,7 @@ export interface Campaign {
   rewardsDistributed?: boolean; // TO DO: remove this field? We could use resultTxId to determine if rewards were distributed
   resultTxId?: string;
   results?: CampaignResultEntry[];
+  noValidApplications?: boolean;
 }
 
 export interface CampaignFormData {

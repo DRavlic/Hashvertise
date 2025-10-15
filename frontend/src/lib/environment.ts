@@ -20,6 +20,6 @@ export const API_ENDPOINTS = {
   GET_TOPIC_MESSAGES: (topicId: string) =>
     `${API_URL}/topic/messages/${topicId}`,
   GET_CONFIG: `${API_URL}/hashvertise/config`,
-  GET_CAMPAIGN_RESULTS: (topicId: string) =>
+  GET_CAMPAIGN_RESULTS: (topicId: string) => // TO DO: see if we need this endpoint; remove it on backend also if not needed
     `${API_URL}/topic/campaign/${topicId}/results`,
 };
