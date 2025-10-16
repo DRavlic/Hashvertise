@@ -48,7 +48,7 @@ export interface Campaign {
   createdAt: string;
   startDateUtc: string;
   endDateUtc: string;
-  rewardsDistributed?: boolean; // TO DO: remove this field? We could use resultTxId to determine if rewards were distributed
+  rewardsDistributed?: boolean; // TODO: remove this field? We could use resultTxId to determine if rewards were distributed
   resultTxId?: string;
   results?: CampaignResultEntry[];
   noValidApplications?: boolean;
