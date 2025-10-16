@@ -155,7 +155,7 @@ export function Campaigns() {
                 </div>
                 <div className="mb-4">
                   <div className="font-medium text-success-600">
-                    Prize: ${campaign.prizePool.toFixed(2)}
+                    Prize: {campaign.prizePool.toFixed(2)} HBAR
                   </div>
                 </div>
                 <Link
