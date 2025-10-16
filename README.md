@@ -191,3 +191,39 @@ The platform uses Hedera wallet-based authentication:
    - The signature is valid using HashConnect's verification
    - The topic exists on the Hedera network
 4. After verification, the backend sets up a topic listener for the campaign
+
+## Contributing
+
+Contribution to Hashvertise is welcomed! Here's how you can help:
+
+### Getting Started
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes and add tests if applicable
+4. Commit your changes: `git commit -m 'Add some amazing feature'`
+5. Push to the branch: `git push origin feature/amazing-feature`
+6. Open a Pull Request
+
+### Development Guidelines
+
+- Follow the existing code style and conventions
+- Add appropriate tests for new features
+- Update documentation as needed
+- Ensure all tests pass before submitting a PR
+
+### Reporting Issues
+
+If you find a bug or have a feature request, please open an issue on GitHub with:
+- A clear description of the problem or feature
+- Steps to reproduce (for bugs)
+- Expected vs actual behavior
+- Your environment details
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Support
+
+For questions or support, please open an issue on GitHub or contact the maintainers.

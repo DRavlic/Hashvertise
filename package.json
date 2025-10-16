@@ -1,6 +1,5 @@
 {
   "name": "hashvertise",
-  "private": true,
   "workspaces": [
     "frontend",
     "backend"

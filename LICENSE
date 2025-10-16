@@ -1,30 +1,21 @@
-# Hashvertise License
+MIT License
 
-## 1. Non-Commercial Use
+Copyright (c) 2025 Domagoj Ravlic
 
-You are granted a non-exclusive, non-transferable, revocable license to use, modify, and distribute this software **for personal and non-commercial purposes only**.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-## 2. Commercial Use Requires a Separate License
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-You **may NOT** use this software for commercial purposes without obtaining a commercial license from Domagoj Ravlic.
-
-### Definition of Commercial Use
-
-Commercial use includes, but is not limited to:
-
-- Selling products/services that include or are derived from this software.
-- Using the software for business operations.
-- Integrating the software into a paid or monetized product/platform.
-
-## 3. Requesting a Commercial License
-
-To obtain a commercial license, contact:  
-📧 [domagoj@ravlic.com]
-
-## 4. Governing Law
-
-This agreement is governed by the laws of Republic of Croatia. Any disputes shall be resolved in the courts of Republic of Croatia.
-
-## 5. No Warranty
-
-This software is provided "as is" without any warranties or guarantees. The author is not responsible for any issues that may arise from its use.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
