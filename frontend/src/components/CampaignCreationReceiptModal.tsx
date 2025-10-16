@@ -98,6 +98,12 @@ export function CampaignCreationReceiptModal({
                     {formatHbar(receipt.totalAmountHbar)} HBAR
                   </span>
                 </div>
+                {/* TODO: Add precise network fees in HBAR or other units if needed */}
+                <div className="flex justify-end mt-1">
+                  <span className="text-xs text-secondary-500">
+                    + Network fees
+                  </span>
+                </div>
               </div>
             </div>
 
