@@ -1,4 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
-  <rect width="32" height="32" rx="6" fill="#2563eb"/>
-  <text x="16" y="22" font-family="Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="white">H</text>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="32" height="32">
+<path d="M0 0 C10.56 0 21.12 0 32 0 C32 10.56 32 21.12 32 32 C21.44 32 10.88 32 0 32 C0 21.44 0 10.88 0 0 Z " fill="#4171DA" transform="translate(0,0)"/>
+<path d="M0 0 C1.32 0 2.64 0 4 0 C4 1.98 4 3.96 4 6 C5.65 6 7.3 6 9 6 C9 4.02 9 2.04 9 0 C10.65 0 12.3 0 14 0 C14.08076963 2.45898655 14.14037143 4.91533742 14.1875 7.375 C14.22520508 8.42300781 14.22520508 8.42300781 14.26367188 9.4921875 C14.29296875 11.5234375 14.29296875 11.5234375 14 15 C13.01 15.66 12.02 16.32 11 17 C10.01 16.67 9.02 16.34 8 16 C8.33 14.02 8.66 12.04 9 10 C7.35 10 5.7 10 4 10 C4 11.98 4 13.96 4 16 C2.68 16.33 1.36 16.66 0 17 C0 11.39 0 5.78 0 0 Z " fill="#F8FAFD" transform="translate(9,7)"/>
 </svg>
