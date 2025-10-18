@@ -10,22 +10,22 @@ import {
 const router = express.Router();
 
 /**
- * @route GET /api/x/tweets/:userName
+ * @route GET /api/x/tweets/:xHandle
  * @description Get last tweets of a Twitter user
  * @access Public
  */
 router.get(
-  "/tweets/:userName",
+  "/tweets/:xHandle",
   validateRequest(getUserTweetsSchema),
   getUserTweets
 );
 
 /**
- * @route GET /api/x/user/:userName
+ * @route GET /api/x/user/:xHandle
  * @description Get user info from Twitter
  * @access Public
  */
-router.get("/user/:userName", validateRequest(getUserInfoSchema), getUserInfo);
+router.get("/user/:xHandle", validateRequest(getUserInfoSchema), getUserInfo);
 
 /**
  * @route POST /api/x/distribute-reward/:topicId

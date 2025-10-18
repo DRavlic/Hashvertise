@@ -39,7 +39,7 @@ export interface Tweet {
 
 export interface Author {
   type: string;
-  userName: string;
+  xHandle: string;
   url: string;
   id: string;
   name: string;
@@ -89,7 +89,7 @@ export interface TwitterUserInfoResponse {
 export interface TwitterUserInfo {
   id: string;
   name: string;
-  userName: string;
+  xHandle: string;
   location: string;
   url: string;
   description: string;

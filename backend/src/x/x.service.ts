@@ -37,24 +37,24 @@ import { CampaignModel } from "../topic/topic.model";
 /**
  * Fetches the last tweets of a Twitter user
  *
- * @param {string} userName - Twitter username
+ * @param {string} xHandle - Twitter username
  * @param {string} cursor - Cursor for pagination (optional)
  * @returns {Promise<UserTweetsServiceResponse>} - Clean service response
  */
 export const fetchUserLastTweets = async (
-  userName: string,
+  xHandle: string,
   cursor?: string
 ): Promise<UserTweetsServiceResponse> => {
   try {
-    // Strip '@' from the beginning of userName if present
-    const cleanUserName = userName.startsWith("@")
-      ? userName.substring(1)
-      : userName;
+    // Strip '@' from the beginning of xHandle if present
+    const cleanXHandle = xHandle.startsWith("@")
+      ? xHandle.substring(1)
+      : xHandle;
 
     const url = new URL(
       `${TWITTER_API_BASE_URL}${TWITTER_USER_LAST_TWEETS_ENDPOINT}`
     );
-    url.searchParams.append("userName", cleanUserName);
+    url.searchParams.append("userName", cleanXHandle);
 
     if (cursor !== undefined) {
       url.searchParams.append("cursor", cursor);
@@ -76,7 +76,7 @@ export const fetchUserLastTweets = async (
       logger.error(`Error fetching tweets: ${JSON.stringify(apiResponse)}`);
       return {
         success: false,
-        error: apiResponse.msg || `Error fetching tweets for ${cleanUserName}`,
+        error: apiResponse.msg || `Error fetching tweets for ${cleanXHandle}`,
       };
     }
 
@@ -84,7 +84,7 @@ export const fetchUserLastTweets = async (
     if (!tweetsData) {
       return {
         success: false,
-        error: `No data returned for ${cleanUserName}`,
+        error: `No data returned for ${cleanXHandle}`,
       };
     }
 
@@ -106,20 +106,20 @@ export const fetchUserLastTweets = async (
 /**
  * Gets user info from X
  *
- * @param {string} userName - X username
+ * @param {string} xHandle - X username
  * @returns {Promise<UserInfoServiceResponse>} - Clean service response
  */
 export const fetchUserInfo = async (
-  userName: string
+  xHandle: string
 ): Promise<UserInfoServiceResponse> => {
   try {
-    // Strip '@' from the beginning of userName if present
-    const cleanUserName = userName.startsWith("@")
-      ? userName.substring(1)
-      : userName;
+    // Strip '@' from the beginning of xHandle if present
+    const cleanXHandle = xHandle.startsWith("@")
+      ? xHandle.substring(1)
+      : xHandle;
 
     const url = new URL(`${TWITTER_API_BASE_URL}${TWITTER_USER_INFO_ENDPOINT}`);
-    url.searchParams.append("userName", cleanUserName);
+    url.searchParams.append("userName", cleanXHandle);
 
     const options = {
       method: "GET",
@@ -136,7 +136,7 @@ export const fetchUserInfo = async (
       logger.error(`Error fetching user info: ${JSON.stringify(data)}`);
       return {
         success: false,
-        error: data.msg || `Error fetching user info for ${cleanUserName}`,
+        error: data.msg || `Error fetching user info for ${cleanXHandle}`,
       };
     }
 

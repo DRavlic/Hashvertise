@@ -19,7 +19,7 @@ export class UserX {
   public xId!: string;
 
   @prop({ default: true, unique: true })
-  public userName!: string;
+  public xHandle!: string;
 
   @prop({ default: true })
   public createdOnXUtc!: Date;

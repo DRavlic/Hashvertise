@@ -68,7 +68,7 @@ export const validateUserInfo = async (
     if (xHandle) {
       try {
         // Check if X handle already exists in our database
-        let userX = await UserXModel.findOne({ userName: xHandle });
+        let userX = await UserXModel.findOne({ xHandle: xHandle });
 
         if (!userX) {
           // Validate X handle exists on X platform
@@ -83,7 +83,7 @@ export const validateUserInfo = async (
           // Create UserX record
           userX = await UserXModel.create({
             xId: userInfo.userInfo!.id,
-            userName: xHandle,
+            xHandle: xHandle,
             createdOnXUtc: createUtcDate(
               new Date(userInfo.userInfo!.createdAt)
             ),

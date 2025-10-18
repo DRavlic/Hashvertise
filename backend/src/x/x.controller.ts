@@ -10,7 +10,7 @@ import {
 /**
  * Get the last tweets of a Twitter user
  *
- * @param {Request} req - Express request object with userName in params and optional cursor in query
+ * @param {Request} req - Express request object with xHandle in params and optional cursor in query
  * @param {Response} res - Express response object
  * @returns {Promise<Response>} HTTP response with tweets or error
  */
@@ -19,10 +19,10 @@ export const getUserTweets = async (
   res: Response
 ): Promise<Response> => {
   try {
-    const { userName } = req.params;
+    const { xHandle } = req.params;
     const cursor = req.query.cursor as string | undefined;
 
-    const userLastTweetsResponse = await fetchUserLastTweets(userName, cursor);
+    const userLastTweetsResponse = await fetchUserLastTweets(xHandle, cursor);
 
     if (!userLastTweetsResponse.success) {
       return res.status(StatusCodes.BAD_REQUEST).json({
@@ -53,7 +53,7 @@ export const getUserTweets = async (
 /**
  * Get user info from Twitter
  *
- * @param {Request} req - Express request object with userName in params
+ * @param {Request} req - Express request object with xHandle in params
  * @param {Response} res - Express response object
  * @returns {Promise<Response>} HTTP response with user info or error
  */
@@ -62,9 +62,9 @@ export const getUserInfo = async (
   res: Response
 ): Promise<Response> => {
   try {
-    const { userName } = req.params;
+    const { xHandle } = req.params;
 
-    const userInfoResponse = await fetchUserInfo(userName);
+    const userInfoResponse = await fetchUserInfo(xHandle);
 
     if (!userInfoResponse.success) {
       return res.status(StatusCodes.BAD_REQUEST).json({

@@ -124,7 +124,7 @@ const handleTopicMessage = async (
     }
 
     // Check if this X handle is valid and actually exists in our database (which should have happened before user submitted message to topic)
-    const userX = await UserXModel.findOne({ userName: parsedMessage.XHandle });
+    const userX = await UserXModel.findOne({ xHandle: parsedMessage.XHandle });
     if (!userX) {
       logger.info(
         `X handle ${parsedMessage.XHandle} not found in our database, skipping...`
