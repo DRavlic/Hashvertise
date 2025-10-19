@@ -24,4 +24,6 @@ export const API_ENDPOINTS = {
     `${API_URL}/topic/campaign/${topicId}/results`,
   GET_PARTICIPATIONS: (accountId: string) =>
     `${API_URL}/topic/participations/${accountId}`,
+  GET_CREATED_CAMPAIGNS: (accountId: string) =>
+    `${API_URL}/topic/campaigns/created/${accountId}`,
 };

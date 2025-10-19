@@ -105,7 +105,7 @@ export interface CampaignCreationReceipt {
 }
 
 /**
- * User participation interface
+ * Campaign and participation interfaces
  */
 
 export interface UserParticipation {
@@ -119,4 +119,13 @@ export interface UserParticipation {
     startDateUtc: string;
     endDateUtc: string;
   };
+}
+export interface UserCreatedCampaign {
+  _id: string;
+  topicId: string;
+  name: string;
+  prizePool: number;
+  startDateUtc: string;
+  endDateUtc: string;
+  participantCount: number;
 }

@@ -8,6 +8,7 @@ import {
   getCampaign,
   getCampaignResults,
   getParticipations,
+  getCreatedCampaigns,
 } from "./topic.controller";
 import { validateRequest } from "../common/common.middleware";
 import {
@@ -105,6 +106,17 @@ router.get(
   "/participations/:accountId",
   validateRequest(participationsGetSchema),
   getParticipations
+);
+
+/**
+ * @route GET /api/topic/campaigns/created/:accountId
+ * @description Get campaigns created by a specific account
+ * @access Public
+ */
+router.get(
+  "/campaigns/created/:accountId",
+  validateRequest(participationsGetSchema),
+  getCreatedCampaigns
 );
 
 export default router;

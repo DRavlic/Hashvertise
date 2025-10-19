@@ -758,7 +758,7 @@ const buildCampaignQuery = (
  * Get user participations with campaign details
  *
  * @param {string} accountId - User's account ID
- * @returns {Promise<any[]>} Array of participations with campaign data
+ * @returns Array of participations with campaign data
  */
 export const getUserParticipations = async (
   accountId: string
@@ -801,6 +801,47 @@ export const getUserParticipations = async (
   } catch (error: any) {
     logger.error(
       `Error getting user participations for ${accountId}: ${error.message}`
+    );
+    throw error;
+  }
+};
+
+/**
+ * Get campaigns created by a specific account with participant counts
+ *
+ * @param {string} accountId - The account ID of the campaign creator
+ * @returns Array of campaigns with participant counts
+ */
+export const getUserCreatedCampaigns = async (
+  accountId: string
+): Promise<any[]> => {
+  try {
+    const campaigns = await CampaignModel.find({ accountId })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const campaignsWithCounts = await Promise.all(
+      campaigns.map(async (campaign) => {
+        const participantCount = await CampaignParticipationModel.countDocuments(
+          { topicId: campaign.topicId }
+        );
+
+        return {
+          _id: (campaign as any)._id,
+          topicId: campaign.topicId,
+          name: campaign.name,
+          prizePool: campaign.prizePool,
+          startDateUtc: campaign.startDateUtc,
+          endDateUtc: campaign.endDateUtc,
+          participantCount,
+        };
+      })
+    );
+
+    return campaignsWithCounts;
+  } catch (error: any) {
+    logger.error(
+      `Error getting user created campaigns for ${accountId}: ${error.message}`
     );
     throw error;
   }
