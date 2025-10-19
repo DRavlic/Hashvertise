@@ -122,3 +122,12 @@ export const campaignResultsGetSchema = z.object({
     }),
   }),
 });
+
+// Schema for getting user participations
+export const participationsGetSchema = z.object({
+  params: z.object({
+    accountId: z.string({
+      required_error: "Account ID is required",
+    }),
+  }),
+});

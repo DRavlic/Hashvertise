@@ -12,6 +12,7 @@ import {
   listCampaigns,
   getCampaignByTopicId,
   verifyAdvertiserDeposit,
+  getUserParticipations,
 } from "./topic.service";
 import logger from "../common/common.instances";
 import { scheduleCampaignEndProcessing } from "../scheduler/scheduler.manager";
@@ -345,6 +346,34 @@ export const getCampaignResults = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     logger.error("Error in getCampaignResults controller:", error);
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      error: "Internal server error",
+      details: error.message || String(error),
+    });
+  }
+};
+
+/**
+ * Get user participations
+ *
+ * @param req - Express request object containing accountId in params
+ * @param res - Express response object
+ * @returns A list of user participations with campaign data
+ */
+export const getParticipations = async (req: Request, res: Response) => {
+  try {
+    const { accountId } = req.params;
+
+    const participations = await getUserParticipations(accountId);
+
+    return res.status(StatusCodes.OK).json({
+      success: true,
+      participations,
+      total: participations.length,
+    });
+  } catch (error: any) {
+    logger.error("Error in getParticipations controller:", error);
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
       error: "Internal server error",

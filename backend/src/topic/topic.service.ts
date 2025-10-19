@@ -11,6 +11,7 @@ import {
   CampaignModel,
   CampaignParticipationModel,
   Campaign,
+  CampaignParticipation,
 } from "./topic.model";
 import logger from "../common/common.instances";
 import {
@@ -751,4 +752,56 @@ const buildCampaignQuery = (
   }
 
   return query;
+};
+
+/**
+ * Get user participations with campaign details
+ *
+ * @param {string} accountId - User's account ID
+ * @returns {Promise<any[]>} Array of participations with campaign data
+ */
+export const getUserParticipations = async (
+  accountId: string
+): Promise<any[]> => {
+  try {
+    // Get all participations for this user
+    const participations = await CampaignParticipationModel.find({ accountId })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Get all campaign details for these participations
+    const topicIds = participations.map((p) => p.topicId);
+    const campaigns = await CampaignModel.find({ topicId: { $in: topicIds } }).lean();
+
+    // Create a map for quick campaign lookup
+    const campaignMap = new Map(campaigns.map((c) => [c.topicId, c]));
+
+    // Combine participation data with campaign data
+    const enrichedParticipations = participations
+      .map((participation) => {
+        const campaign = campaignMap.get(participation.topicId);
+        if (!campaign) return null;
+
+        return {
+          _id: participation._id,
+          xHandle: participation.xHandle,
+          prizeWonHbar: participation.prizeWonHbar,
+          campaign: {
+            topicId: campaign.topicId,
+            name: campaign.name,
+            prizePool: campaign.prizePool,
+            startDateUtc: campaign.startDateUtc,
+            endDateUtc: campaign.endDateUtc,
+          },
+        };
+      })
+      .filter((p) => p !== null);
+
+    return enrichedParticipations;
+  } catch (error: any) {
+    logger.error(
+      `Error getting user participations for ${accountId}: ${error.message}`
+    );
+    throw error;
+  }
 };

@@ -7,6 +7,7 @@ import {
   getCampaigns,
   getCampaign,
   getCampaignResults,
+  getParticipations,
 } from "./topic.controller";
 import { validateRequest } from "../common/common.middleware";
 import {
@@ -17,6 +18,7 @@ import {
   campaignsListSchema,
   campaignGetSchema,
   campaignResultsGetSchema,
+  participationsGetSchema,
 } from "./topic.schema";
 
 const router = express.Router();
@@ -92,6 +94,17 @@ router.get(
   "/campaign/:topicId/results",
   validateRequest(campaignResultsGetSchema),
   getCampaignResults
+);
+
+/**
+ * @route GET /api/topic/participations/:accountId
+ * @description Get user participations by account ID
+ * @access Public
+ */
+router.get(
+  "/participations/:accountId",
+  validateRequest(participationsGetSchema),
+  getParticipations
 );
 
 export default router;
