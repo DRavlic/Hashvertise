@@ -9,6 +9,7 @@ import {
   TopicListenerModel,
   TopicMessageModel,
   CampaignModel,
+  CampaignParticipationModel,
   Campaign,
 } from "./topic.model";
 import logger from "../common/common.instances";
@@ -151,6 +152,16 @@ const handleTopicMessage = async (
       consensusTimestamp: hederaTimestamp, // No additional conversion needed since Hedera consensus timestamps are in UTC
     });
     logger.info(`Saved new message for topic ${topicId}`);
+
+    // Create participation record
+    await CampaignParticipationModel.create({
+      topicId: topicId,
+      accountId: parsedMessage.accountId,
+      xHandle: parsedMessage.XHandle,
+      prizeWonHbar: null, // Will be updated when rewards are distributed
+    });
+
+    logger.info(`Saved new participation record for topic ${topicId} and account ${parsedMessage.accountId}`);
   } catch (error: any) {
     // TODO: see if this and other similar error logs are necessary
     logger.error(
