@@ -103,3 +103,29 @@ export interface CampaignCreationReceipt {
   startDate: Date; // Campaign start date
   endDate: Date; // Campaign end date
 }
+
+/**
+ * Campaign and participation interfaces
+ */
+
+export interface UserParticipation {
+  _id: string;
+  xHandle: string;
+  prizeWonHbar: number | null;
+  campaign: {
+    topicId: string;
+    name: string;
+    prizePool: number;
+    startDateUtc: string;
+    endDateUtc: string;
+  };
+}
+export interface UserCreatedCampaign {
+  _id: string;
+  topicId: string;
+  name: string;
+  prizePool: number;
+  startDateUtc: string;
+  endDateUtc: string;
+  participantCount: number;
+}

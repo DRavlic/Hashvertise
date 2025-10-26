@@ -5,6 +5,7 @@ import { Home } from "./pages/Home";
 import { CreateCampaign } from "./pages/CreateCampaign";
 import { Campaigns } from "./pages/Campaigns";
 import { CampaignDetails } from "./pages/CampaignDetails";
+import { Profile } from "./pages/Profile";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -18,6 +19,7 @@ function App() {
             <Route path="/campaign/new" element={<CreateCampaign />} />
             <Route path="/campaigns" element={<Campaigns />} />
             <Route path="/campaign/:topicId" element={<CampaignDetails />} />
+            <Route path="/profile" element={<Profile />} />
             {/* Add more routes as needed */}
           </Routes>
         </Layout>

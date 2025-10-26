@@ -22,4 +22,8 @@ export const API_ENDPOINTS = {
   GET_CONFIG: `${API_URL}/hashvertise/config`,
   GET_CAMPAIGN_RESULTS: (topicId: string) => // TODO: see if we need this endpoint; remove it on backend also if not needed
     `${API_URL}/topic/campaign/${topicId}/results`,
+  GET_PARTICIPATIONS: (accountId: string) =>
+    `${API_URL}/topic/participations/${accountId}`,
+  GET_CREATED_CAMPAIGNS: (accountId: string) =>
+    `${API_URL}/topic/campaigns/created/${accountId}`,
 };

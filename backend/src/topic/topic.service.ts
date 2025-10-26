@@ -9,7 +9,9 @@ import {
   TopicListenerModel,
   TopicMessageModel,
   CampaignModel,
+  CampaignParticipationModel,
   Campaign,
+  CampaignParticipation,
 } from "./topic.model";
 import logger from "../common/common.instances";
 import {
@@ -151,6 +153,16 @@ const handleTopicMessage = async (
       consensusTimestamp: hederaTimestamp, // No additional conversion needed since Hedera consensus timestamps are in UTC
     });
     logger.info(`Saved new message for topic ${topicId}`);
+
+    // Create participation record
+    await CampaignParticipationModel.create({
+      topicId: topicId,
+      accountId: parsedMessage.accountId,
+      xHandle: parsedMessage.XHandle,
+      prizeWonHbar: null, // Will be updated when rewards are distributed
+    });
+
+    logger.info(`Saved new participation record for topic ${topicId} and account ${parsedMessage.accountId}`);
   } catch (error: any) {
     // TODO: see if this and other similar error logs are necessary
     logger.error(
@@ -740,4 +752,97 @@ const buildCampaignQuery = (
   }
 
   return query;
+};
+
+/**
+ * Get user participations with campaign details
+ *
+ * @param {string} accountId - User's account ID
+ * @returns Array of participations with campaign data
+ */
+export const getUserParticipations = async (
+  accountId: string
+): Promise<any[]> => {
+  try {
+    // Get all participations for this user
+    const participations = await CampaignParticipationModel.find({ accountId })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Get all campaign details for these participations
+    const topicIds = participations.map((p) => p.topicId);
+    const campaigns = await CampaignModel.find({ topicId: { $in: topicIds } }).lean();
+
+    // Create a map for quick campaign lookup
+    const campaignMap = new Map(campaigns.map((c) => [c.topicId, c]));
+
+    // Combine participation data with campaign data
+    const enrichedParticipations = participations
+      .map((participation) => {
+        const campaign = campaignMap.get(participation.topicId);
+        if (!campaign) return null;
+
+        return {
+          _id: participation._id,
+          xHandle: participation.xHandle,
+          prizeWonHbar: participation.prizeWonHbar,
+          campaign: {
+            topicId: campaign.topicId,
+            name: campaign.name,
+            prizePool: campaign.prizePool,
+            startDateUtc: campaign.startDateUtc,
+            endDateUtc: campaign.endDateUtc,
+          },
+        };
+      })
+      .filter((p) => p !== null);
+
+    return enrichedParticipations;
+  } catch (error: any) {
+    logger.error(
+      `Error getting user participations for ${accountId}: ${error.message}`
+    );
+    throw error;
+  }
+};
+
+/**
+ * Get campaigns created by a specific account with participant counts
+ *
+ * @param {string} accountId - The account ID of the campaign creator
+ * @returns Array of campaigns with participant counts
+ */
+export const getUserCreatedCampaigns = async (
+  accountId: string
+): Promise<any[]> => {
+  try {
+    const campaigns = await CampaignModel.find({ accountId })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const campaignsWithCounts = await Promise.all(
+      campaigns.map(async (campaign) => {
+        const participantCount = await CampaignParticipationModel.countDocuments(
+          { topicId: campaign.topicId }
+        );
+
+        return {
+          _id: (campaign as any)._id,
+          topicId: campaign.topicId,
+          name: campaign.name,
+          prizePool: campaign.prizePool,
+          startDateUtc: campaign.startDateUtc,
+          endDateUtc: campaign.endDateUtc,
+          participantCount,
+        };
+      })
+    );
+
+    return campaignsWithCounts;
+  } catch (error: any) {
+    logger.error(
+      `Error getting user created campaigns for ${accountId}: ${error.message}`
+    );
+    throw error;
+  }
 };

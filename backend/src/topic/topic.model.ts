@@ -95,8 +95,34 @@ export class Campaign {
   public results!: CampaignResultEntry[];
 }
 
+@modelOptions({
+  schemaOptions: {
+    timestamps: true,
+    collection: "campaignParticipations",
+  },
+  options: {
+    allowMixed: Severity.ALLOW,
+  },
+})
+@index({ topicId: 1, xHandle: 1 }, { unique: true })
+@index({ accountId: 1 })
+export class CampaignParticipation {
+  @prop({ required: true, index: true })
+  public topicId!: string;
+
+  @prop({ required: true, index: true })
+  public accountId!: string;
+
+  @prop({ required: true })
+  public xHandle!: string;
+
+  @prop({ required: false, default: null })
+  public prizeWonHbar?: number | null;
+}
+
 // Create and export the models
 export const TopicListenerModel = getModelForClass(TopicListener);
 export const TopicMessageModel = getModelForClass(TopicMessage);
 export const CampaignModel = getModelForClass(Campaign);
+export const CampaignParticipationModel = getModelForClass(CampaignParticipation);
 export default TopicListenerModel;

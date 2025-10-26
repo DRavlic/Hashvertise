@@ -32,7 +32,7 @@ import {
 import { UserModel } from "../user/user.model";
 import { CAMPAIGN_COMPLETION_MESSAGE_PREFIX } from "../common/common.constants";
 import BigNumber from "bignumber.js";
-import { CampaignModel } from "../topic/topic.model";
+import { CampaignModel, CampaignParticipationModel } from "../topic/topic.model";
 
 /**
  * Fetches the last tweets of a Twitter user
@@ -391,6 +391,33 @@ export const distributeReward = async (
         { $set: updateData },
         { new: true }
       );
+
+      // Update participation records with prize amounts
+      for (const result of results) {
+        await CampaignParticipationModel.findOneAndUpdate(
+          {
+            topicId: topicId,
+            xHandle: result.xHandle
+          },
+          {
+            prizeWonHbar: result.prizeWonHbar
+          }
+        );
+      }
+
+      // Set prizeWonHbar to 0 for participants who didn't win anything
+      const winnerXHandles = results.map(r => r.xHandle);
+      await CampaignParticipationModel.updateMany(
+        {
+          topicId: topicId,
+          xHandle: { $nin: winnerXHandles }
+        },
+        {
+          prizeWonHbar: 0
+        }
+      );
+
+      logger.info(`Updated participation records for campaign ${topicId}`);
     }
 
     return {
