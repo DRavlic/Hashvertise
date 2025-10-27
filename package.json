@@ -2,7 +2,8 @@
   "name": "hashvertise",
   "workspaces": [
     "frontend",
-    "backend"
+    "backend",
+    "smart-contracts"
   ],
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
@@ -17,16 +18,7 @@
   "devDependencies": {
     "concurrently": "^8.2.0"
   },
-  "dependencies": {
-    "buffer": "^6.0.3",
-    "media-typer": "^1.1.0",
-    "side-channel": "^1.1.0",
-    "stream-browserify": "^3.0.0"
-  },
-  "resolutions": {
-    "@hashgraph/sdk": "^2.63.0",
-    "hashconnect/@hashgraph/sdk": "^2.63.0"
-  },
+  
   "overrides": {
     "@hashgraph/sdk": "2.63.0"
   }

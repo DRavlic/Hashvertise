@@ -45,6 +45,24 @@ The project follows a client-server architecture for interacting with the Hedera
 - **Backend** handles topic listeners and authenticated Hedera transactions
 - **Smart Contracts** manage HBAR deposits and prize distribution
 
+## Monorepo and Workspaces
+
+This repository is an npm workspaces monorepo. The root `package.json` defines workspaces for:
+
+- `frontend/` – React + Vite app (browser)
+- `backend/` – Express + TypeScript API (Node)
+- `smart-contracts/` – Hardhat + Solidity (Node)
+
+Key behavior and tips:
+
+- Single install and lockfile: run `npm install` at the repo root. It creates one `package-lock.json` for all workspaces.
+- Hoisted dependencies: npm hoists shared packages to the root `node_modules`. It’s normal if a workspace (e.g., `smart-contracts/`) has no local `node_modules` folder — it will resolve from the root.
+- Per-workspace commands: use `npm run <script> --workspace=<name>` or `npm exec --workspace=<name> <bin>` to run tasks in a specific workspace.
+- Do not run `npm install` inside workspace folders when using workspaces; always install from the root.
+
+
+## Installing and Running
+
 ## Installation
 
 ### Prerequisites
@@ -62,7 +80,7 @@ The project follows a client-server architecture for interacting with the Hedera
    cd hashvertise
    ```
 
-2. Install dependencies
+2. Install dependencies (root, for all workspaces)
 
    ```bash
    npm install
@@ -118,42 +136,69 @@ The project follows a client-server architecture for interacting with the Hedera
 
 ### Development Mode
 
-Start all services:
+- Run both backend and frontend together (via `concurrently`):
 
-```bash
-# Start backend server
-npm run dev:backend
+  ```bash
+  npm run dev
+  ```
 
-# Start frontend development server
-npm run dev:frontend
-```
+- Run a single workspace:
 
-Or use the combined script:
+  ```bash
+  # Frontend dev server
+  npm run dev --workspace=frontend
 
-```bash
-npm run dev
-```
+  # Backend dev server
+  npm run dev --workspace=backend
+  ```
 
 ## Smart Contract Tasks
 
-Hashvertise includes several Hardhat tasks to interact with the smart contracts:
+Smart contracts are a workspace. Prefer running via workspace-aware npm commands:
+
+```bash
+# Compile
+npm run compile --workspace=smart-contracts
+
+# Run tests
+npm run test --workspace=smart-contracts
+
+# Run a Hardhat binary directly in the workspace
+npm exec --workspace=smart-contracts hardhat --version
+```
+
+Hashvertise also includes Hardhat tasks you can invoke directly with Hardhat (workspace context assumed by `npm exec`):
 
 ### Deposit HBAR to a Campaign
 
 ```bash
-npx hardhat deposit --contract 0.0.1140000 --topicId 0.0.6006038 --amount 0.02 --chain testnet
+npm exec --workspace=smart-contracts hardhat deposit \
+  --contract 0.0.1140000 \
+  --topicId 0.0.6006038 \
+  --amount 0.02 \
+  --chain testnet
 ```
 
 ### Check Deposit Balance
 
 ```bash
-npx hardhat check-deposit --contract 0.0.1140000 --address 0.0.5532673 --topicId 0.0.6006038 --chain testnet
+npm exec --workspace=smart-contracts hardhat check-deposit \
+  --contract 0.0.1140000 \
+  --address 0.0.5532673 \
+  --topicId 0.0.6006038 \
+  --chain testnet
 ```
 
 ### Distribute Prize to Participants
 
 ```bash
-npx hardhat distribute-prize --contract 0.0.1140000 --advertiser 0.0.5532673 --topicId 0.0.6006038 --participants 0.0.5532673,0.0.5919443 --amounts 0.005,0.005 --chain testnet
+npm exec --workspace=smart-contracts hardhat distribute-prize \
+  --contract 0.0.1140000 \
+  --advertiser 0.0.5532673 \
+  --topicId 0.0.6006038 \
+  --participants 0.0.5532673,0.0.5919443 \
+  --amounts 0.005,0.005 \
+  --chain testnet
 ```
 
 ## Database

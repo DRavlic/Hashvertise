@@ -10,6 +10,8 @@
     "start": "vite preview --port 3000"
   },
   "dependencies": {
+    "@hashgraph/sdk": "^2.63.0",
+    "buffer": "^6.0.3",
     "@walletconnect/encoding": "^1.0.2",
     "@walletconnect/modal": "^2.7.0",
     "@walletconnect/sign-client": "^2.20.0",
@@ -23,12 +25,8 @@
     "react-router-dom": "^7.5.2",
     "react-toastify": "^11.0.5"
   },
-  "peerDependencies": {
-    "@hashgraph/sdk": "^2.63.0"
-  },
   "devDependencies": {
     "@eslint/js": "^9.22.0",
-    "@hashgraph/sdk": "^2.63.0",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
@@ -42,13 +40,5 @@
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.26.1",
     "vite": "^6.3.1"
-  },
-  "overrides": {
-    "hashconnect": {
-      "@hashgraph/sdk": "2.63.0"
-    },
-    "@hashgraph/hedera-wallet-connect": {
-      "@hashgraph/sdk": "2.63.0"
-    }
   }
 }
